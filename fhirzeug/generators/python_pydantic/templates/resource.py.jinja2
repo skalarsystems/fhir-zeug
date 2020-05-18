@@ -24,7 +24,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     {%- if prop.is_array %}
         {%- set type_name = "typing.List[{}]".format(type_name) %}
     {%- endif %}
-    {%- if prop.is_optional %}
+    {%- if prop.is_optional or prop.one_of_many %}{# one of many https://www.hl7.org/fhir/formats.html#choice #}
         {%- set type_name = "typing.Optional[{}]".format(type_name) %}
     {%- endif %}
     {{ prop.name }}: {{ type_name }}
