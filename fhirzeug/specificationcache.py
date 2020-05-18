@@ -7,7 +7,6 @@ import zipfile
 import requests
 
 from .logger import logger
-from .config_model import Settings
 
 
 def safe_pathname(filename: str) -> str:

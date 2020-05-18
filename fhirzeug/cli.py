@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from . import fhirspec
+from . import fhirspec, logger
 from .specificationcache import SpecificationCache
 
 
@@ -21,6 +21,8 @@ def main(
     download_cache: Path = Path("./downloads"),
 ):
     """Download and parse FHIR resource definitions."""
+
+    logger.setup_logging()
 
     generator_module = f"fhirzeug.generators.{generator}.settings"
 
