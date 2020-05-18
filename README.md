@@ -1,4 +1,5 @@
 [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
+![CI](https://github.com/skalarsystems/fhirzeug/workflows/CI/badge.svg)
 
 # FHIR Zeug - A FHIR Spec Compiler
 
