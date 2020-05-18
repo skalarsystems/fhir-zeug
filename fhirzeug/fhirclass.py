@@ -193,11 +193,18 @@ class FHIRClass:
         return self.resource_type[:1].lower() + self.resource_type[1:]
 
     @property
-    def choice_properties(self) -> Dict[str, set]:
-        result: Dict[str, set] = {}
+    def choice_properties(self) -> Dict[str, list]:
+        result: Dict[str, list] = {}
         for p in self.properties:
             if p.choice_of_type:
-                result.setdefault(p.choice_of_type, set()).add(p.name)
+                result.setdefault(p.choice_of_type, []).append(p.name)
+        return result
+
+    @property
+    def properties_map(self) -> Dict[str, "FHIRClassProperty"]:
+        result: Dict[str, "FHIRClassProperty"] = {}
+        for p in self.properties:
+            result[p.name] = p
         return result
 
     def __repr__(self):

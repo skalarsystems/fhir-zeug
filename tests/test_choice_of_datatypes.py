@@ -31,56 +31,6 @@ from typing import Optional
 # the validator needs to be moved into a pydantic generator section
 
 
-def choice_of_validator(choices):
-    def check_at_least_one(cls, values):
-
-        setted_values = len(
-            set(k for k, v in values.items() if v is not None) & choices
-        )
-        if setted_values > 1:
-            raise ValueError(f"Only one of the fields is allowed to be set ({choices})")
-        elif setted_values < 1:
-            raise ValueError(f"A t least one of the fields needs to be set ({choices})")
-        return values
-
-    return check_at_least_one
-
-
-class X(BaseModel):
-
-    a: Optional[str]
-    b: Optional[str]
-    c: Optional[str]
-
-    x: int = 1
-
-    # @validator(*choice_of)
-    # def check_only_one(cls, val, values):
-    #     if len(values) > 1:
-    #         raise ValueError("Only one of the fields is allowed to be set ()")
-
-    _abc_choice_validator = root_validator()(choice_of_validator({"a", "b", "c"}))
-
-
-@pytest.mark.parametrize(
-    "is_ok,data",
-    [
-        (True, {"a": "Hello"}),
-        (True, {"b": "Hello"}),
-        (False, {},),
-        (False, {"b": "Hello", "c": "World"}),
-    ],
-)
-def test_pydantic_model(is_ok, data):
-    """This tests if the function which is used in the template would work"""
-
-    if not is_ok:
-        with pytest.raises(ValidationError):
-            X(**data)
-    else:
-        X(**data)
-
-
 def test_cot(spec: FHIRSpec):
     clz = spec.profiles["usagecontext"].classes[0]
 
@@ -96,3 +46,9 @@ def test_cot(spec: FHIRSpec):
     # pprint(clz.nonexpanded_nonoptionals_all)
     # # pprint([p.__dict__ for p in clz.properties])
     # assert False
+
+
+def test_cot(spec: FHIRSpec):
+    clz = spec.profiles["annotation"].classes[0]
+
+    assert clz.choice_properties["author"] == {}
