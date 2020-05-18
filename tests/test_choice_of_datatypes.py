@@ -34,7 +34,7 @@ from typing import Optional
 def test_cot(spec: FHIRSpec):
     clz = spec.profiles["usagecontext"].classes[0]
 
-    assert clz.choice_properties["value"] == {
+    assert set(clz.choice_properties["value"]) == {
         "valueRange",
         "valueReference",
         "valueQuantity",
@@ -46,9 +46,3 @@ def test_cot(spec: FHIRSpec):
     # pprint(clz.nonexpanded_nonoptionals_all)
     # # pprint([p.__dict__ for p in clz.properties])
     # assert False
-
-
-def test_cot(spec: FHIRSpec):
-    clz = spec.profiles["annotation"].classes[0]
-
-    assert clz.choice_properties["author"] == {}
