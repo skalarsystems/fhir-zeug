@@ -8,6 +8,7 @@ import yaml
 from . import fhirspec, logger
 from .specificationcache import SpecificationCache
 from .generators.yaml_model import GeneratorConfig
+from .generator import generate
 
 
 app = typer.Typer()
@@ -47,7 +48,7 @@ def main(
     if not load_only:
         spec = fhirspec.FHIRSpec(loader.cache_dir, generator_settings, generator_module)
         if not dry_run:
-            spec.write(output_directory, generator_config)
+            generate(spec, output_directory, generator_config)
 
 
 if __name__ == "__main__":
