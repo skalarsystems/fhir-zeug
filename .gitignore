@@ -188,15 +188,10 @@ $RECYCLE.BIN/
 
 # End of https://www.gitignore.io/api/linux,macos,python,windows,visualstudiocode
 
-# ignore mappings and settings files
-/mappings.py
-/settings.py
-
 # ignore downloads
 /downloads
 
-py_*
 .venv
 
-r4.py
 output
+pydantic-fhir

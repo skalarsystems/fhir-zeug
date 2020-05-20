@@ -9,12 +9,15 @@ import glob
 import json
 import datetime
 import shutil
+from pathlib import Path
 from typing import Dict, List
 
 from .logger import logger
 from . import fhirclass, fhirunittest, fhirrenderer
+from .generators.yaml_model import GeneratorConfig
 
 
+# TODO: check
 # allow to skip some profiles by matching against their url (used while WiP)
 skip_because_unsupported = [
     r"SimpleQuantity",
@@ -25,7 +28,7 @@ class FHIRSpec(object):
     """ The FHIR specification.
     """
 
-    def __init__(self, directory: str, settings, generator_module: str):
+    def __init__(self, directory: Path, settings, generator_module: str):
         assert os.path.isdir(directory)
         assert settings is not None
         self.directory = directory
@@ -285,12 +288,36 @@ class FHIRSpec(object):
                 profiles.append(profile)
         return profiles
 
-    def write(self):
+    def write(self, output_directory: Path, generator_config: GeneratorConfig):
+
+        output_directory.mkdir(exist_ok=True)
+        generator_path = Path(self.settings.__file__).parent
+
+        # copy examples if configured
+        if generator_config.copy_examples is not None:
+            dest_directory = output_directory.joinpath(
+                generator_config.copy_examples.destination
+            )
+            dest_directory.mkdir(parents=True, exist_ok=True)
+            for source_path in self.directory.glob("*-example.json"):
+                dest_path = dest_directory.joinpath(source_path.name)
+                shutil.copy2(source_path, dest_path)
+
+        # copy static files
+        shutil.copytree(
+            generator_path.joinpath("static_files"),
+            output_directory,
+            dirs_exist_ok=True,
+        )
+
+        # configureable templates
 
         if self.settings.write_resources:
-            with open("output/r4.py", "w") as f_out:
-                with open(
-                    "fhirzeug/generators/python_pydantic/templates/resource_header.py"
+            with output_directory.joinpath(generator_config.output_file).open(
+                "w"
+            ) as f_out:
+                with generator_path.joinpath("templates/resource_header.py").open(
+                    "r"
                 ) as f_in:
                     shutil.copyfileobj(f_in, f_out)
                 value_set_renderer = fhirrenderer.FHIRValueSetRenderer(
@@ -303,8 +330,8 @@ class FHIRSpec(object):
                 )
                 renderer.render(f_out)
 
-                with open(
-                    "fhirzeug/generators/python_pydantic/templates/resource_footer.py"
+                with generator_path.joinpath("templates/resource_footer.py").open(
+                    "r"
                 ) as f_in:
                     shutil.copyfileobj(f_in, f_out)
 
