@@ -9,7 +9,7 @@ from fhirzeug.fhirspec import FHIRSpec
 @pytest.fixture(scope="session")
 def specification_settings():
     """A spec cache of r4"""
-    from fhirzeug.generators.python import settings
+    from fhirzeug.generators.python_pydantic import settings
 
     return settings
 

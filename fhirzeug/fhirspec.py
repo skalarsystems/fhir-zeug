@@ -9,12 +9,15 @@ import glob
 import json
 import datetime
 import shutil
+from pathlib import Path
 from typing import Dict, List
 
 from .logger import logger
 from . import fhirclass, fhirunittest, fhirrenderer
+from .generators.yaml_model import GeneratorConfig
 
 
+# TODO: check
 # allow to skip some profiles by matching against their url (used while WiP)
 skip_because_unsupported = [
     r"SimpleQuantity",
@@ -25,7 +28,7 @@ class FHIRSpec(object):
     """ The FHIR specification.
     """
 
-    def __init__(self, directory: str, settings, generator_module: str):
+    def __init__(self, directory: Path, settings, generator_module: str):
         assert os.path.isdir(directory)
         assert settings is not None
         self.directory = directory
@@ -284,48 +287,6 @@ class FHIRSpec(object):
             if profile.manual_module is None:
                 profiles.append(profile)
         return profiles
-
-    def write(self):
-
-        if self.settings.write_resources:
-            with open("output/r4.py", "w") as f_out:
-                with open(
-                    "fhirzeug/generators/python_pydantic/templates/resource_header.py"
-                ) as f_in:
-                    shutil.copyfileobj(f_in, f_out)
-                value_set_renderer = fhirrenderer.FHIRValueSetRenderer(
-                    self, self.settings, self.generator_module
-                )
-                value_set_renderer.render(f_out)
-
-                renderer = fhirrenderer.FHIRStructureDefinitionRenderer(
-                    self, self.settings, self.generator_module
-                )
-                renderer.render(f_out)
-
-                with open(
-                    "fhirzeug/generators/python_pydantic/templates/resource_footer.py"
-                ) as f_in:
-                    shutil.copyfileobj(f_in, f_out)
-
-        # if self.settings.write_factory:
-        #     renderer = fhirrenderer.FHIRFactoryRenderer(
-        #         self, self.settings, self.generator_module
-        #     )
-        #     renderer.render()
-
-        # if self.settings.write_dependencies:
-        #     renderer = fhirrenderer.FHIRDependencyRenderer(
-        #         self, self.settings, self.generator_module
-        #     )
-        #     renderer.render()
-
-        # if self.settings.write_unittests:
-        #     self.parse_unit_tests()
-        #     renderer = fhirrenderer.FHIRUnitTestRenderer(
-        #         self, self.settings, self.generator_module
-        #     )
-        #     renderer.render()
 
 
 class FHIRVersionInfo(object):
