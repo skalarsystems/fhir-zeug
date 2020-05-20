@@ -7,6 +7,13 @@ from .generators.yaml_model import GeneratorConfig
 
 
 def generate(spec: FHIRSpec, output_directory: Path, generator_config: GeneratorConfig):
+    """Generates code based on the spec and the generator.
+    
+    
+    Args:
+        spec: A parsed specification.
+        output_directory: The directory where the output goes to.
+    """
     output_directory.mkdir(exist_ok=True)
     generator_path = Path(spec.settings.__file__).parent
 
@@ -26,7 +33,6 @@ def generate(spec: FHIRSpec, output_directory: Path, generator_config: Generator
     )
 
     # configureable templates
-
     if spec.settings.write_resources:
         with output_directory.joinpath(generator_config.output_file).open("w") as f_out:
             with generator_path.joinpath("templates/resource_header.py").open(
