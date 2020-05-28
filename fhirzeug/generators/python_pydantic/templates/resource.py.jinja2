@@ -8,7 +8,6 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {%- endif %}
     """
 {%- if clazz.resource_type %}
-    # TODO: add typing.Final here?
     resourceType = "{{ clazz.resource_type }}"
 {%- endif %}
     
