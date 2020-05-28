@@ -192,8 +192,3 @@ $RECYCLE.BIN/
 /downloads
 
 .venv
-
-# ignore generated code
-output
-pydantic-fhir
-pydantic_fhir
