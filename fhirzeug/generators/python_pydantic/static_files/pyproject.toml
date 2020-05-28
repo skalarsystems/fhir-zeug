@@ -1,9 +1,23 @@
 [tool.poetry]
 name = "pydantic-fhir"
-version = "0.0.1-alpha"
+version = "0.0.1-alpha3"
 description = "Generated FHIR model for Pydantic."
+readme = "README.md"
 authors = ["Skalar Systems <contact@skalarsystems.com>"]
 license = "Apache-2.0"
+keywords = ["FHIR", "pydantic"]
+homepage = "https://github.com/skalarsystems/fhirzeug"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Intended Audience :: Healthcare Industry",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+#packages = [
+#    {include="pydantic_fhir"}
+#    ]
 
 [tool.poetry.dependencies]
 python = "^3.6"

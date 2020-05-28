@@ -193,5 +193,7 @@ $RECYCLE.BIN/
 
 .venv
 
+# ignore generated code
 output
 pydantic-fhir
+pydantic_fhir
