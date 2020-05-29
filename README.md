@@ -23,8 +23,11 @@ FHIR® is the registered trademark of [HL7](http://hl7.org) and is used with the
 The `fhir_zeug.cli` module is the central CLI utility included. In an installed environment it can
 be called with
 
+Make sure you have the ouput not in the project directory otherwise you will run into issues with
+poetry.
+
 ```
-poetry run fhirzeug  --output-directory pydantic-fhir --generator python_pydantic
+poetry run fhirzeug  --output-directory ../pydantic-fhir --generator python_pydantic
 ```
 
 It will:

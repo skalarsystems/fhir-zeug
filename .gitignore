@@ -192,6 +192,3 @@ $RECYCLE.BIN/
 /downloads
 
 .venv
-
-output
-pydantic-fhir
