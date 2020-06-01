@@ -8,7 +8,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {%- endif %}
     """
 {%- if clazz.resource_type %}
-    resourceType = "{{ clazz.resource_type }}"
+    resource_type = "{{ clazz.resource_type }}"
 {%- endif %}
     class Config:
         alias_generator = fhir_alias_generator

@@ -231,7 +231,7 @@ class FHIRClass:
         return result
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}> path: {self.path}, name: {self.name}, resourceType: {self.resource_type}"
+        return f"<{self.__class__.__name__}> path: {self.path}, name: {self.name}, resource_type: {self.resource_type}"
 
 
 class FHIRClassProperty:
