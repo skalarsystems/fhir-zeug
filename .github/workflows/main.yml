@@ -67,5 +67,4 @@ jobs:
           poetry run fhirzeug  --output-directory pydantic-fhir --generator python_pydantic
           cd pydantic-fhir
           poetry install
-          # this does not work until the _class part is fixed
-          # poetry run pytest
+          poetry run pytest

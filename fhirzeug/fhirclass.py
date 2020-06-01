@@ -1,5 +1,6 @@
 from .logger import logger
 from typing import List, Dict, TYPE_CHECKING
+import regex as re
 
 if TYPE_CHECKING:
     from .fhirspec import FHIRStructureDefinitionElement, FHIRElementType
@@ -194,17 +195,39 @@ class FHIRClass:
 
     @property
     def choice_properties(self) -> Dict[str, list]:
+        return self._choice_properties()
+
+    @property
+    def choice_snakecase_properties(self) -> Dict[str, list]:
+        return self._choice_properties(snake_case=True)
+
+    def _choice_properties(self, snake_case=False) -> Dict[str, list]:
         result: Dict[str, list] = {}
         for p in self.properties:
             if p.choice_of_type:
-                result.setdefault(p.choice_of_type, []).append(p.name)
+                if snake_case:
+                    name = p.snakecase_name
+                else:
+                    name = p.name
+                result.setdefault(p.choice_of_type, []).append(name)
         return result
 
     @property
     def properties_map(self) -> Dict[str, "FHIRClassProperty"]:
+        return self._properties_map()
+
+    @property
+    def snake_case_properties_map(self) -> Dict[str, "FHIRClassProperty"]:
+        return self._properties_map(snake_case=True)
+
+    def _properties_map(self, snake_case=True) -> Dict[str, "FHIRClassProperty"]:
         result: Dict[str, "FHIRClassProperty"] = {}
         for p in self.properties:
-            result[p.name] = p
+            if snake_case:
+                name = p.snakecase_name
+            else:
+                name = p.name
+            result[name] = p
         return result
 
     def __repr__(self):
@@ -291,6 +314,11 @@ class FHIRClassProperty:
     @property
     def desired_classname(self):
         return self.enum.name if self.enum is not None else self.class_name
+
+    @property
+    def snakecase_name(self):
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", self.name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
     @property
     def nonexpanded_name(self):

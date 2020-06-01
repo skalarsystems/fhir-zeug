@@ -16,3 +16,13 @@ def choice_of_validator(choices, optional):
         return values
 
     return check_at_least_one
+
+
+def fhir_alias_generator(name: str) -> str:
+    """Generator for pydantic aliases."""
+
+    # 1) generate an alias if the member has a special name like class_
+    if name.endswith("_"):
+        return name[:-1]
+    components = name.split("_")
+    return components[0] + "".join(word.capitalize() for word in components[1:])
