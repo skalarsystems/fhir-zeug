@@ -1,6 +1,9 @@
 
-class {{system.name}}(enum.Enum):
+class {{system.name}}(str, enum.Enum):
     {% for code in system.codes %}
     {{code.name}} = "{{code.code}}"
     """{{code.definition}} """
     {% endfor %}
+    def __repr__(self):
+        return "'{}'".format(str(self.value))
+

@@ -1,6 +1,7 @@
 import typing
 import enum
 import pydantic
+from collections.abc import Mapping
 
 
 def choice_of_validator(choices, optional):
