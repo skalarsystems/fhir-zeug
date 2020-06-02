@@ -69,4 +69,4 @@ jobs:
           poetry install
           # execute all tests except to ones we excpect to fail
           # I got the via `./pydantic_gen_and_test.sh | grep FAILED`
-          poetry run pytest -k "-xds-example.json -activitydefinition-servicerequest-example.json -parameters-example.json -guidanceresponse-example.json -bundle-example.json -activitydefinition-example.json -healthcareservice-example.json -plandefinition-example.json -activitydefinition-medicationorder-example.json -diagnosticreport-example.json -requestgroup-example.json -medicationknowledge-example.json -relatedperson-example.json -careplan-example.json -plandefinition-protocol-example.json -requestgroup-kdn5-example.json -measurereport-cms146-cat2-example.json -careteam-example.json -measurereport-cms146-cat3-example.json -diagnosticreport-hla-genetics-results-example.json -measurereport-cms146-cat1-example.json -documentreference-example.json -plandefinition-options-example.json -patient-example.json -documentmanifest-example.json -questionnaireresponse-example.json -specimen-example.json -activitydefinition-predecessor-example.json"
+          poetry run pytest tests
