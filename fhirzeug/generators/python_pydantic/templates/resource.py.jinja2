@@ -36,7 +36,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 
 {%- if prop.desired_classname == "Resource" %}
     @pydantic.validator("{{ prop.name | snake_case }}", pre=True,  each_item=True)
-    def resource_factory(cls, value, field):
+    def resource_factory(cls, value):
         return from_dict(value)
 {%- endif %}
 {% endfor %}
