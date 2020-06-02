@@ -1,5 +1,6 @@
 
-class {{system.name}}(enum.Enum):
+# this inherits from string as well so we can serialzie it correctly with pydantic
+class {{system.name}}(str, enum.Enum):
     {% for code in system.codes %}
     {{code.name}} = "{{code.code}}"
     """{{code.definition}} """
