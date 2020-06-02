@@ -10,9 +10,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {%- if clazz.resource_type %}
     resource_type = "{{ clazz.resource_type }}"
 {%- endif %}
-    class Config:
-        alias_generator = camelcase_alias_generator
-        allow_population_by_field_name = True
+
 
 
     # {{clazz.properties}}

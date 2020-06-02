@@ -1,41 +1,21 @@
 from collections.abc import Mapping
 
 
-class FHIRValidationError(Exception):
-    """ Exception raised when one or more errors occurred during model
-    validation.
+def camelcase_alias_generator(name: str) -> str:
+    """Maps snakecase to camelcase.
+    
+    This enables members to be created from camelCase. It takes the existing camelcase membername
+    like foo_bar and converts it to its camelcase pedant fooBar.
+    
+    Additionally it removes trailing _, since this is used to make membernames of reserved keywords
+    usable, like `class`.
     """
 
-    def __init__(self, errors, path=None):
-        """ Initializer.
-        
-        :param errors: List of Exception instances. Also accepts a string,
-            which is converted to a TypeError.
-        :param str path: The property path on the object where errors occurred
-        """
-        if not isinstance(errors, list):
-            errors = [TypeError(errors)]
-        msgs = "\n  ".join([str(e).replace("\n", "\n  ") for e in errors])
-        message = "{}:\n  {}".format(path or "{root}", msgs)
+    if name.endswith("_"):
+        return name[:-1]
 
-        super(FHIRValidationError, self).__init__(message)
-
-        self.errors = errors
-        """ A list of validation errors encountered. Typically contains
-        TypeError, KeyError, possibly AttributeError and others. """
-
-        self.path = path
-        """ The path on the object where the errors occurred. """
-
-    def prefixed(self, path_prefix):
-        """ Creates a new instance of the receiver, with the given path prefix
-        applied. """
-        path = (
-            "{}.{}".format(path_prefix, self.path)
-            if self.path is not None
-            else path_prefix
-        )
-        return self.__class__(self.errors, path)
+    components = name.split("_")
+    return components[0] + "".join(word.capitalize() for word in components[1:])
 
 
 def _without_empty_items(obj: typing.Any):
@@ -69,6 +49,10 @@ def _without_empty_items(obj: typing.Any):
 class FHIRAbstractBase(pydantic.BaseModel):
     """Abstract base class for all FHIR elements.
     """
+
+    class Config:
+        alias_generator = camelcase_alias_generator
+        allow_population_by_field_name = True
 
     # def dict(self, *args, **kwargs):
     #     serialized = super().dict(*args, **kwargs)
