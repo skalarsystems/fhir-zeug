@@ -1,5 +1,5 @@
-class FHIRAbstractResource(FHIRAbstractBase):
-    """ Extends the FHIRAbstractBase with server talking capabilities.
-    """
 
-    resourceType = "FHIRAbstractResource"
+
+class FHIRAbstractResource(FHIRAbstractBase):
+
+    resource_type = "FHIRAbstractResource"

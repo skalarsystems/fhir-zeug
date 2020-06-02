@@ -6,6 +6,7 @@ import textwrap
 from pprint import pprint
 from typing import Optional, TextIO
 from pathlib import Path
+from stringcase import snakecase
 
 from jinja2 import Environment, PackageLoader, TemplateNotFound
 from jinja2.filters import environmentfilter
@@ -23,6 +24,7 @@ class FHIRRenderer:
             loader=PackageLoader(generator_module, self.settings.tpl_base)
         )
         self.jinjaenv.filters["wordwrap"] = do_wordwrap
+        self.jinjaenv.filters["snake_case"] = snakecase
 
     @classmethod
     def cleaned_settings(cls, settings):
