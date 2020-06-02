@@ -1,16 +1,20 @@
 import pytest
 import pydantic
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
-    fhir_alias_generator,
+    camelcase_alias_generator,
 )
 
 
 def test_special_names():
-    assert fhir_alias_generator("class_") == "class"
+    assert camelcase_alias_generator("class_") == "class"
 
 
 def test_camel_case():
-    assert fhir_alias_generator("this_is_a_test") == "thisIsATest"
+    assert camelcase_alias_generator("this_is_a_test") == "thisIsATest"
+
+
+def test_camel_case_foo():
+    assert camelcase_alias_generator("f_o_o_bar") == "fOOBar"
 
 
 class AliasTestModel(pydantic.BaseModel):
@@ -19,7 +23,7 @@ class AliasTestModel(pydantic.BaseModel):
     foo_bar: str
 
     class Config:
-        alias_generator = fhir_alias_generator
+        alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
 
 

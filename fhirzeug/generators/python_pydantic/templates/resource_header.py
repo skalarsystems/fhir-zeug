@@ -19,11 +19,18 @@ def choice_of_validator(choices, optional):
     return check_at_least_one
 
 
-def fhir_alias_generator(name: str) -> str:
-    """Generator for pydantic aliases."""
+def camelcase_alias_generator(name: str) -> str:
+    """Maps snakecase to camelcase.
+    
+    This enables members to be created from camelCase. It takes the existing camelcase membername
+    like foo_bar and converts it to its camelcase pedant fooBar.
+    
+    Additionally it removes trailing _, since this is used to make membernames of reserved keywords
+    usable, like `class`.
+    """
 
-    # 1) generate an alias if the member has a special name like class_
     if name.endswith("_"):
         return name[:-1]
+
     components = name.split("_")
     return components[0] + "".join(word.capitalize() for word in components[1:])
