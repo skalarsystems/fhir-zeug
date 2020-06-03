@@ -3,7 +3,7 @@ import pydantic
 import typing
 import base64
 
-from fhirzeug.generators.python_pydantic.templates.fhirdate import (
+from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import (
     FHIRDate,
     FHIRDateTime,
     FHIRTime,
