@@ -11,6 +11,8 @@ jinja2 = "^2.11.2"
 requests = "^2.23.0"
 typer = "^0.1.1"
 colorlog = "^4.1.0"
+pyyaml = "^5.3.1"
+stringcase = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

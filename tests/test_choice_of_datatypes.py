@@ -32,6 +32,7 @@ from typing import Optional
 
 
 def test_cot(spec: FHIRSpec):
+    """Test the hypothesis for the useagecontext"""
     clz = spec.profiles["usagecontext"].classes[0]
 
     assert set(clz.choice_properties["value"]) == {
@@ -40,9 +41,3 @@ def test_cot(spec: FHIRSpec):
         "valueQuantity",
         "valueCodeableConcept",
     }
-    # clz.has_choice_of_type
-    # pprint(spec.profiles["usagecontext"].classes)
-    # pprint(clz.nonexpanded_properties)
-    # pprint(clz.nonexpanded_nonoptionals_all)
-    # # pprint([p.__dict__ for p in clz.properties])
-    # assert False

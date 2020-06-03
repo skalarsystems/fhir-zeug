@@ -8,15 +8,15 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {%- endif %}
     """
 {%- if clazz.resource_type %}
-    
     resource_type = "{{ clazz.resource_type }}"
 {%- endif %}
-    
+
+
+
     # {{clazz.properties}}
   
 {% for prop in clazz.properties %}
     
-
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
         {%- set type_name = "\"{}\"".format(type_name) %}
@@ -27,7 +27,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     {%- if prop.is_optional or prop.choice_of_type %}{# one of many https://www.hl7.org/fhir/formats.html#choice #}
         {%- set type_name = "typing.Optional[{}]".format(type_name) %}
     {%- endif %}
-    {{ prop.name }}: {{ type_name }}
+    {{ prop.name | snake_case }}: {{ type_name }}
 
     """ {{ prop.short|wordwrap(67, wrapstring="\n        ") }}.
     {% if prop.is_array %}List of{% else %}Type{% endif %} `{{ prop.desired_classname }}`{% if prop.is_array %} items{% endif %}
@@ -37,11 +37,10 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 
 {% for choice_prop, compound in clazz.choice_properties.items() %}
 #   {{ clazz.properties_map[compound[0]].__dict__}}
-
-    _{{choice_prop}}_choice_of_type_validator = pydantic.root_validator(allow_reuse=True) \
-     (choice_of_validator(set({{compound}}), {{clazz.properties_map[compound[0]].is_optional}}))
+    _{{choice_prop | snake_case}}_choice_of_type_validator = pydantic.root_validator(allow_reuse=True) \
+     (choice_of_validator(set({{compound | map('snake_case') | list}}), {{clazz.properties_map[compound[0]].is_optional}}))
 {% endfor %}
-
+    
     {# {% for prop in clazz.properties %} #}
 
      {# @validator('b')
