@@ -307,8 +307,7 @@ class FHIRVersionInfo(object):
     def read_version(self, filepath):
         assert os.path.isfile(filepath)
         with io.open(filepath, "r", encoding="utf-8") as handle:
-            text = handle.read()
-            for line in text.split("\n"):
+            for line in handle.readlines():
                 if "=" in line:
                     (n, v) = line.strip().split("=", 2)
                     if "FhirVersion" == n:
@@ -469,7 +468,7 @@ class FHIRCodeSystem(object):
     def parsed_codes(self, codes, prefix=None):
         found = []
         for c in codes:
-            if re.match(r"\d", c["code"][:1]):
+            if c["code"][:1].isdigit():
                 self.generate_enum = False
                 logger.info(
                     'Will not generate enum for CodeSystem "{}" because at least one concept code starts with a number'.format(
