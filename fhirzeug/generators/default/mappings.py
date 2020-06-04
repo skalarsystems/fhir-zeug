@@ -11,21 +11,21 @@ classmap = {
     "positiveInt": "int",
     "unsignedInt": "int",
     "date": "FHIRDate",
-    "dateTime": "FHIRDate",
-    "instant": "FHIRDate",
-    "time": "FHIRDate",
+    "dateTime": "FHIRDateTime",
+    "instant": "FHIRInstant",
+    "time": "FHIRTime",
     "decimal": "float",
     "string": "str",
     "markdown": "str",
-    "id": "str",
-    "code": "str",  # for now we're not generating enums for these
+    "id": "FHIRId",
+    "code": "FHIRCode",  # for now we're not generating enums for these
     "uri": "str",
     "url": "str",
     "canonical": "str",
-    "oid": "str",
+    "oid": "FHIROid",
     "uuid": "str",
     "xhtml": "str",
-    "base64Binary": "str",
+    "base64Binary": "FHIRBase64Binary",
 }
 
 # Classes to be replaced with different ones at resource rendering time
