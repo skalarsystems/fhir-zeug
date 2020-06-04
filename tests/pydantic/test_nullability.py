@@ -85,3 +85,7 @@ def test_non_empty_list_items_are_serialized():
             {"list_field_a": "list item 3 a"},
         ],
     }
+
+
+def test_empty_strings_are_ignored():
+    assert RootModel(field_a="", field_c=True).dict() == {"field_c": True}
