@@ -282,11 +282,8 @@ class FHIRSpec(object):
     def writable_profiles(self):
         """ Returns a list of `FHIRStructureDefinition` instances.
         """
-        profiles = []
-        for key, profile in self.profiles.items():
-            if profile.manual_module is None:
-                profiles.append(profile)
-        return profiles
+        return [profile for profile in self.profiles.values() 
+                if profile.manual_module is None]
 
 
 class FHIRVersionInfo(object):
@@ -702,11 +699,7 @@ class FHIRStructureDefinition(object):
         return sorted(references)
 
     def writable_classes(self):
-        classes = []
-        for klass in self.classes:
-            if klass.should_write():
-                classes.append(klass)
-        return classes
+        return [klass for klass in self.classes if klass.should_write()]
 
     # MARK: Finalizing
 

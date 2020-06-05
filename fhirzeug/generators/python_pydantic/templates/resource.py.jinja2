@@ -15,8 +15,11 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 
     # {{clazz.properties}}
   
+{% set enums = [] %}
 {% for prop in clazz.properties %}
-    
+    {%- if prop.enum %}
+        {{ enums.append(prop.enum.name) or ""}}
+    {% endif %}  
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
         {%- set type_name = "\"{}\"".format(type_name) %}
@@ -33,6 +36,12 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     {% if prop.is_array %}List of{% else %}Type{% endif %} `{{ prop.desired_classname }}`{% if prop.is_array %} items{% endif %}
     {%- if prop.reference_to_names|length > 0 %} referencing `{{ prop.reference_to_names|join(', ') }}`{% endif %}
     {%- if prop.json_class != prop.desired_classname %} (represented as `{{ prop.json_class }}` in JSON){% endif %}. """
+
+{%- if prop.desired_classname == "Resource" %}
+    @pydantic.validator("{{ prop.name | snake_case }}", pre=True,  each_item=True)
+    def resource_factory(cls, value):
+        return from_dict(value)
+{%- endif %}
 {% endfor %}
 
 {% for choice_prop, compound in clazz.choice_properties.items() %}
@@ -40,16 +49,20 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     _{{choice_prop | snake_case}}_choice_of_type_validator = pydantic.root_validator(allow_reuse=True) \
      (choice_of_validator(set({{compound | map('snake_case') | list}}), {{clazz.properties_map[compound[0]].is_optional}}))
 {% endfor %}
-    
-    {# {% for prop in clazz.properties %} #}
+{%-if enums %}
+    class Config:
 
-     {# @validator('b')
-  def check_a_or_b(cls, v, values):
-    if 'a' not in values and not b:
-      raise ValueError('either a or b is required')
-    return b #}
-    
-
-{# {%- for clazz in classes %}
-{{ clazz.name }}.update_forward_refs()
-{%- endfor %} #}
+        @staticmethod
+        def schema_extra(schema: typing.Dict[str, typing.Any]) -> None:
+        {%- for enum in enums %}
+            {%-if enum == "DaysOfWeek"%}
+            enums = schema["properties"]["dayOfWeek"]["items"]["enum"]
+            {%- else %}
+            enums = schema["properties"]["{{ enum | cut_first_letter }}"]["enum"]
+            {%- endif  %}
+            enums.clear()
+            for item in {{ enum }}:
+                a = {"value": item.value, "description": item.__doc__}
+                enums.append(a)
+        {% endfor %}
+{% endif %}

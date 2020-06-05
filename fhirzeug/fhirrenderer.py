@@ -25,6 +25,7 @@ class FHIRRenderer:
         )
         self.jinjaenv.filters["wordwrap"] = do_wordwrap
         self.jinjaenv.filters["snake_case"] = snakecase
+        self.jinjaenv.filters["cut_first_letter"] = cut_first_letter
 
     @classmethod
     def cleaned_settings(cls, settings):
@@ -122,6 +123,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
         derive_graph = {}
 
         # sort according to derive
+        # MoneyQuantity name changes to Quantity
         for profile in self.spec.writable_profiles():
             classes = profile.writable_classes()
             for cl in classes:
@@ -325,3 +327,7 @@ def do_wordwrap(environment, s, width=79, break_long_words=True, wrapstring=None
             )
         )
     return wrapstring.join(accumulator)
+
+def cut_first_letter(value):
+    """cut the first letter of camelcase word and make it lowercase"""
+    return re.search('.*([A-Z].*)', value)[1].lower()

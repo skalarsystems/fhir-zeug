@@ -1,5 +1,5 @@
 import typing
-import enum
+from enum import Enum
 import pydantic
 
 
@@ -33,6 +33,23 @@ def camelcase_alias_generator(name: str) -> str:
 
     components = name.split("_")
     return components[0] + "".join(word.capitalize() for word in components[1:])
+
+
+class DocEnum(Enum):
+    """Enum with docstrings support"""
+
+    def __new__(cls, value, doc=None):
+        """add docstring to the member of Enum if exists
+        
+        Args:
+            value: Enum member value
+            doc: Enum member docstring, None if not exists
+        """
+        obj = str.__new__(cls)
+        obj._value_ = value
+        if doc:
+            obj.__doc__ = doc
+        return obj
 
 
 class FHIRAbstractBase(pydantic.BaseModel):

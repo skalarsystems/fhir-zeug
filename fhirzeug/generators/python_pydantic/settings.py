@@ -61,7 +61,7 @@ manual_profiles = [
     #     ["FHIRReference"],
     # ),
     (
-        "./fhirzeug/generators/python_pydantic/templates/fhirdate.py",
+        "./fhirzeug/generators/python_pydantic/templates/fhir_basic_types.py",
         "fhirdate",
         ["date", "dateTime", "instant", "time"],
     ),
