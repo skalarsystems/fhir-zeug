@@ -18,7 +18,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {% set enums = [] %}
 {% for prop in clazz.properties %}
     {%- if prop.enum %}
-        {{ enums.append(prop.enum.name) or ""}}
+        {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
     {% endif %}  
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
@@ -55,13 +55,13 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
         @staticmethod
         def schema_extra(schema: typing.Dict[str, typing.Any]) -> None:
         {%- for enum in enums %}
-            {%-if enum == "DaysOfWeek"%}
-            enums = schema["properties"]["dayOfWeek"]["items"]["enum"]
+            {%-if enum["enum"] == "DaysOfWeek"%}
+            enums = schema["properties"]["{{ enum["name"] }}"]["items"]["enum"]
             {%- else %}
-            enums = schema["properties"]["{{ enum | cut_first_letter }}"]["enum"]
+            enums = schema["properties"]["{{ enum["name"] }}"]["enum"]
             {%- endif  %}
             enums.clear()
-            for item in {{ enum }}:
+            for item in {{ enum["enum"] }}:
                 a = {"value": item.value, "description": item.__doc__}
                 enums.append(a)
         {% endfor %}
