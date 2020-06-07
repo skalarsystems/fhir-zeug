@@ -1,7 +1,12 @@
+import typing
+import inspect
+import decimal
+import base64
+
+
 import pytest
 import pydantic
-import typing
-import base64
+
 
 from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import (
     FHIRDate,
@@ -24,6 +29,7 @@ class TestModel(pydantic.BaseModel):
     base64: typing.Optional[FHIRBase64Binary]
     oid: typing.Optional[FHIROid]
     fhir_id: typing.Optional[FHIRId]
+    decimal: typing.Optional[decimal.Decimal]
 
 
 def test_fhirdate():
@@ -98,3 +104,11 @@ def test_fhirid():
     model = TestModel(fhir_id="foo.bar")
     with pytest.raises(pydantic.ValidationError):
         model = TestModel(fhir_id="?")
+
+def test_decimal():
+    """Test FHIRDecimal
+    https://www.hl7.org/fhir/datatypes.html#decimal"""
+    with pytest.raises(pydantic.ValidationError):
+        model = TestModel(decimal="FOO")
+    
+    model = TestModel(decimal=3.14000000000000012434497875801)

@@ -1,5 +1,8 @@
 import typing
-from enum import Enum
+import decimal
+import enum
+
+
 import pydantic
 
 
@@ -35,7 +38,7 @@ def camelcase_alias_generator(name: str) -> str:
     return components[0] + "".join(word.capitalize() for word in components[1:])
 
 
-class DocEnum(Enum):
+class DocEnum(enum.Enum):
     """Enum with docstrings support"""
 
     def __new__(cls, value, doc=None):
