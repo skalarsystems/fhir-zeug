@@ -25,7 +25,6 @@ class FHIRRenderer:
         )
         self.jinjaenv.filters["wordwrap"] = do_wordwrap
         self.jinjaenv.filters["snake_case"] = snakecase
-        self.jinjaenv.filters["cut_first_letter"] = cut_first_letter
 
     @classmethod
     def cleaned_settings(cls, settings):
@@ -327,7 +326,3 @@ def do_wordwrap(environment, s, width=79, break_long_words=True, wrapstring=None
             )
         )
     return wrapstring.join(accumulator)
-
-def cut_first_letter(value):
-    """cut the first letter of camelcase word and make it lowercase"""
-    return re.search('.*([A-Z].*)', value)[1].lower()
