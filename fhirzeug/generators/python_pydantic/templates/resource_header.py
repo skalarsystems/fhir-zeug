@@ -48,7 +48,7 @@ class DocEnum(enum.Enum):
             value: Enum member value
             doc: Enum member docstring, None if not exists
         """
-        obj = str.__new__(cls)
+        obj = str.__new__(cls, value)
         obj._value_ = value
         if doc:
             obj.__doc__ = doc
