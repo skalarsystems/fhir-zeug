@@ -282,8 +282,6 @@ class FHIRSpec(object):
     def writable_profiles(self):
         """ Returns a list of `FHIRStructureDefinition` instances.
         """
-        print([profile for profile in self.profiles.values() 
-                if profile.manual_module is None])
         return [profile for profile in self.profiles.values() 
                 if profile.manual_module is None]
 
