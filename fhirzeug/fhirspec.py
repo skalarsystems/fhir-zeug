@@ -299,18 +299,15 @@ class FHIRVersionInfo(object):
         self.date = now.isoformat()
         self.year = now.year
 
-        self.version = None
         infofile = os.path.join(directory, "version.info")
-        self.read_version(infofile)
+        self.version = self.read_version(infofile)
 
     def read_version(self, filepath):
         assert os.path.isfile(filepath)
         with io.open(filepath, "r", encoding="utf-8") as handle:
             for line in handle.readlines():
-                if "=" in line:
-                    (n, v) = line.strip().split("=", 2)
-                    if "FhirVersion" == n:
-                        self.version = v
+                if line.startswith('FhirVersion'):
+                    return line.split('=', 2)[1].strip()
 
 
 class FHIRValueSetEnum(object):
