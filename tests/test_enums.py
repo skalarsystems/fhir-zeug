@@ -14,16 +14,18 @@ def test_desired_classname(spec: FHIRSpec):
     ].desired_classname == "AccountStatus"
 
 
-
-class TestEnum(str, DocEnum):
+class ExampleEnum(str, DocEnum):
     red = "RED", "it is red color"
-    blue = "BLUE", """it is blue color bla bla 
-    bla"""
+    blue = (
+        "BLUE",
+        """it is blue color bla bla
+    bla""",
+    )
 
 
 def test_enum_docstring():
     """check to see if The Enum Member docstring set correctly
     """
-    red = TestEnum.red
+    red = ExampleEnum.red
     assert red.value == "RED"
     assert red.__doc__ == "it is red color"
