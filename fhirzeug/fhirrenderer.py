@@ -244,52 +244,6 @@ class FHIRValueSetRenderer(FHIRRenderer):
             self.do_render(data, self.settings.tpl_codesystems_source, None, f_out)
 
 
-class FHIRUnitTestRenderer(FHIRRenderer):
-    """ Write unit tests.
-    """
-
-    def render(self):
-        if self.spec.unit_tests is None:
-            return
-
-        # render all unit test collections
-        for coll in self.spec.unit_tests:
-            data = {
-                "info": self.spec.info,
-                "class": coll.klass,
-                "tests": coll.tests,
-            }
-
-            file_pattern = coll.klass.name
-            if self.settings.resource_modules_lowercase:
-                file_pattern = file_pattern.lower()
-            file_name = self.settings.tpl_unittest_target_ptrn.format(file_pattern)
-            file_path = os.path.join(self.settings.tpl_unittest_target, file_name)
-
-            self.do_render(data, self.settings.tpl_unittest_source, file_path)
-
-        # copy unit test files, if any
-        if self.settings.unittest_copyfiles is not None:
-            for origfile in self.settings.unittest_copyfiles:
-                utfile = os.path.join(*origfile.split("/"))
-                if os.path.exists(utfile):
-                    target = os.path.join(
-                        self.settings.tpl_unittest_target, os.path.basename(utfile)
-                    )
-                    logger.info(
-                        "Copying unittest file {} to {}".format(
-                            os.path.basename(utfile), target
-                        )
-                    )
-                    shutil.copyfile(utfile, target)
-                else:
-                    logger.warn(
-                        'Unit test file "{}" configured in `unittest_copyfiles` does not exist'.format(
-                            utfile
-                        )
-                    )
-
-
 # There is a bug in Jinja's wordwrap (inherited from `textwrap`) in that it
 # ignores existing linebreaks when applying the wrap:
 # https://github.com/mitsuhiko/jinja2/issues/175

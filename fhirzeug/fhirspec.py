@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from .logger import logger
-from . import fhirclass, fhirunittest, fhirrenderer
+from . import fhirclass, fhirrenderer
 from .generators.yaml_model import GeneratorConfig
 
 
@@ -41,7 +41,6 @@ class FHIRSpec(object):
         self.profiles: Dict[
             str, "FHIRStructureDefinition"
         ] = {}  # profile-name: FHIRStructureDefinition()
-        self.unit_tests = None  # FHIRUnitTestCollection()
 
         self.generator_module = generator_module
 
@@ -269,13 +268,6 @@ class FHIRSpec(object):
 
     def json_class_for_class_name(self, class_name):
         return self.settings.jsonmap.get(class_name, self.settings.jsonmap_default)
-
-    # MARK: Unit Tests
-
-    def parse_unit_tests(self):
-        controller = fhirunittest.FHIRUnitTestController(self)
-        controller.find_and_parse_tests(self.directory)
-        self.unit_tests = controller.collections
 
     # MARK: Writing Data
 
