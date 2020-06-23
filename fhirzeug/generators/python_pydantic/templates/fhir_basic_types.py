@@ -25,4 +25,4 @@ FHIROid = exact_regex_constr(regex=r"urn:oid:[0-2](\.(0|[1-9][0-9]*))+")
 
 FHIRId = exact_regex_constr(regex=r"[A-Za-z0-9\-\.]{1,64}")
 
-FHIRBase64Binary = exact_regex_constr(regex=r"(\s*([0-9a-zA-Z\+\=]){4}\s*)+")
+FHIRBase64Binary = exact_regex_constr(regex=r"(\s*([0-9a-zA-Z\+/=]){4}\s*)+")

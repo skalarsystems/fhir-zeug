@@ -93,6 +93,10 @@ def test_fhirbase64binary():
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(base64=message)
 
+    model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk=")
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")
+
 
 def test_fhiroid():
     """Test FHIROid
