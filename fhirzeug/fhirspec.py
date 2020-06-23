@@ -282,11 +282,8 @@ class FHIRSpec(object):
     def writable_profiles(self):
         """ Returns a list of `FHIRStructureDefinition` instances.
         """
-        profiles = []
-        for key, profile in self.profiles.items():
-            if profile.manual_module is None:
-                profiles.append(profile)
-        return profiles
+        return [profile for profile in self.profiles.values() 
+                if profile.manual_module is None]
 
 
 class FHIRVersionInfo(object):
@@ -300,19 +297,15 @@ class FHIRVersionInfo(object):
         self.date = now.isoformat()
         self.year = now.year
 
-        self.version = None
         infofile = os.path.join(directory, "version.info")
-        self.read_version(infofile)
+        self.version = self.read_version(infofile)
 
     def read_version(self, filepath):
         assert os.path.isfile(filepath)
         with io.open(filepath, "r", encoding="utf-8") as handle:
-            text = handle.read()
-            for line in text.split("\n"):
-                if "=" in line:
-                    (n, v) = line.strip().split("=", 2)
-                    if "FhirVersion" == n:
-                        self.version = v
+            for line in handle.readlines():
+                if line.startswith('FhirVersion'):
+                    return line.split('=', 2)[1].strip()
 
 
 class FHIRValueSetEnum(object):
@@ -469,7 +462,7 @@ class FHIRCodeSystem(object):
     def parsed_codes(self, codes, prefix=None):
         found = []
         for c in codes:
-            if re.match(r"\d", c["code"][:1]):
+            if c["code"][:1].isdigit():
                 self.generate_enum = False
                 logger.info(
                     'Will not generate enum for CodeSystem "{}" because at least one concept code starts with a number'.format(
@@ -703,11 +696,7 @@ class FHIRStructureDefinition(object):
         return sorted(references)
 
     def writable_classes(self):
-        classes = []
-        for klass in self.classes:
-            if klass.should_write():
-                classes.append(klass)
-        return classes
+        return [klass for klass in self.classes if klass.should_write()]
 
     # MARK: Finalizing
 

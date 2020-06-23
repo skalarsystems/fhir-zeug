@@ -38,7 +38,7 @@ class SpecificationCache(object):
         :returns: The path to the directory with all our files.
         """
 
-        if force_download and self.cache_dir.exists():
+        if force_download:
             shutil.rmtree(self.cache_dir, ignore_errors=True)
 
         self.cache_dir.mkdir(parents=True, exist_ok=True)

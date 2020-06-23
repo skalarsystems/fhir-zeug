@@ -122,6 +122,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
         derive_graph = {}
 
         # sort according to derive
+        # MoneyQuantity name changes to Quantity
         for profile in self.spec.writable_profiles():
             classes = profile.writable_classes()
             for cl in classes:

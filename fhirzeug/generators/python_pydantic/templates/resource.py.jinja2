@@ -15,8 +15,11 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 
     # {{clazz.properties}}
   
+{% set enums = [] %}
 {% for prop in clazz.properties %}
-    
+    {%- if prop.enum %}
+        {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
+    {% endif %}  
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
         {%- set type_name = "\"{}\"".format(type_name) %}
@@ -46,6 +49,20 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     _{{choice_prop | snake_case}}_choice_of_type_validator = pydantic.root_validator(allow_reuse=True) \
      (choice_of_validator(set({{compound | map('snake_case') | list}}), {{clazz.properties_map[compound[0]].is_optional}}))
 {% endfor %}
-    
+{%-if enums %}
+    class Config:
 
-
+        @staticmethod
+        def schema_extra(schema: typing.Dict[str, typing.Any]) -> None:
+        {%- for enum in enums %}
+            {%-if enum["enum"] == "DaysOfWeek"%}
+            enums = schema["properties"]["{{ enum["name"] }}"]["items"]["enum"]
+            {%- else %}
+            enums = schema["properties"]["{{ enum["name"] }}"]["enum"]
+            {%- endif  %}
+            enums.clear()
+            for item in {{ enum["enum"] }}:
+                a = {"value": item.value, "description": item.__doc__}
+                enums.append(a)
+        {% endfor %}
+{% endif %}

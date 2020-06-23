@@ -14,7 +14,7 @@ classmap = {
     "dateTime": "FHIRDateTime",
     "instant": "FHIRInstant",
     "time": "FHIRTime",
-    "decimal": "float",
+    "decimal": "decimal.Decimal",
     "string": "str",
     "markdown": "str",
     "id": "FHIRId",
@@ -34,14 +34,14 @@ replacemap = {
 }
 
 # Which class names are native to the language (or can be treated this way)
-natives = ["bool", "int", "float", "str", "dict"]
+natives = ["bool", "int", "float", "str", "dict", "decimal"]
 
 # Which classes are to be expected from JSON decoding
 jsonmap = {
     "str": "str",
     "int": "int",
     "bool": "bool",
-    "float": "float",
+    "decimal.Decimal": "float",
     "FHIRDate": "str",
 }
 jsonmap_default = "dict"

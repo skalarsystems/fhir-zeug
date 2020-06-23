@@ -1,7 +1,6 @@
 
 # this inherits from string as well so we can serialzie it correctly with pydantic
-class {{system.name}}(str, enum.Enum):
+class {{system.name}}(str, DocEnum):
     {% for code in system.codes %}
-    {{code.name}} = "{{code.code}}"
-    """{{code.definition}} """
+    {{code.name}} = "{{code.code}}", """{{code.definition}} """
     {% endfor %}
