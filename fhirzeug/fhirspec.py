@@ -1137,7 +1137,7 @@ class FHIRElementType(object):
 
         if self.code is None:
             raise Exception(f"No element type code found in {type_dict}")
-        if not _is_string(self.code):
+        if not isinstance(self.code, str):
             raise Exception(
                 "Expecting a string for 'code' definition of an element type, got {} as {}".format(
                     self.code, type(self.code)
@@ -1147,7 +1147,7 @@ class FHIRElementType(object):
             self.profile = type_dict.get("targetProfile")
             if (
                 self.profile is not None
-                and not _is_string(self.profile)
+                and not isinstance(self.profile, str)
                 and not isinstance(type_dict.get("targetProfile"), (list,))
             ):  # Added a check to make sure the targetProfile wasn't a list
                 raise Exception(
@@ -1198,7 +1198,3 @@ class FHIRElementMapping(object):
 
     def __init__(self, mapping_arr):
         pass
-
-
-def _is_string(element) -> bool:
-    return isinstance(element, str)
