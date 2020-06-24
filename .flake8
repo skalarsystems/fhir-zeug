@@ -1,0 +1,3 @@
+[flake8]
+ignore = E203,E266,E501,W503,W504,E741
+exclude = .git,__pycache__,.venv,.downloads,fhirzeug/generators/python/,fhirzeug/generators/python_pydantic/templates/
