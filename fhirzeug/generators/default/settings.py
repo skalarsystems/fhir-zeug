@@ -3,7 +3,7 @@
 # indicate directories: the parser will split them on '/' and use os.path to
 # make them platform independent.
 
-from .mappings import *
+from .mappings import *  # noqa: F401, F403
 
 
 # Base URL for where to load specification data from

@@ -1,12 +1,10 @@
-from fhirzeug.fhirspec import FHIRSpec
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     choice_of_validator,
 )
-from pprint import pprint
 
 import pytest
 
-from pydantic import BaseModel, ValidationError, validator, root_validator
+from pydantic import BaseModel, ValidationError, root_validator
 from typing import Optional
 
 

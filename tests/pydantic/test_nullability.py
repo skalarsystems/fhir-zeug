@@ -1,5 +1,4 @@
 import typing
-import pydantic
 
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
@@ -33,7 +32,7 @@ class RootModel(FHIRAbstractBase):
 
 
 def test_returns_none_if_no_fields():
-    assert RootModel().dict() == None
+    assert RootModel().dict() is None
 
 
 def test_not_set_fields_are_ignored():
@@ -66,8 +65,8 @@ def test_empty_lists_are_ignored():
         "field_a": "a",
     }
     assert RootModel(
-        field_a="a", list_items=[ListItem(), ListItem(), ListItem(),]
-    ).dict() == {"field_a": "a",}
+        field_a="a", list_items=[ListItem(), ListItem(), ListItem()]
+    ).dict() == {"field_a": "a"}
 
 
 def test_non_empty_list_items_are_serialized():

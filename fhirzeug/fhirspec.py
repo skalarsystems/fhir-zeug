@@ -4,17 +4,13 @@
 import io
 import os
 import re
-import sys
-import glob
 import json
 import datetime
-import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from .logger import logger
-from . import fhirclass, fhirrenderer
-from .generators.yaml_model import GeneratorConfig
+from . import fhirclass
 
 
 # TODO: check
@@ -163,7 +159,7 @@ class FHIRSpec(object):
         """ Creates in-memory representations for all our manually defined
         profiles.
         """
-        for filepath, module, contains in self.settings.manual_profiles:
+        for _, module, contains in self.settings.manual_profiles:
             for contained in contains:
                 profile = FHIRStructureDefinition(self, None)
                 profile.manual_module = module
@@ -182,7 +178,7 @@ class FHIRSpec(object):
         to perform additional actions, like looking up class implementations
         from different profiles.
         """
-        for key, prof in self.profiles.items():
+        for _, prof in self.profiles.items():
             prof.finalize()
 
     # MARK: Naming Utilities
@@ -473,11 +469,11 @@ class FHIRCodeSystem(object):
                 return None
 
             cd = c["code"]
-            name = (
-                "{}-{}".format(prefix, cd)
-                if prefix and not cd.startswith(prefix)
-                else cd
-            )
+            # name = (
+            #     "{}-{}".format(prefix, cd)
+            #     if prefix and not cd.startswith(prefix)
+            #     else cd
+            # )
             code_name = self.spec.safe_enum_name(cd)
             if len(code_name) < 1:
                 raise Exception(
@@ -651,7 +647,7 @@ class FHIRStructureDefinition(object):
                     enum_cls, did_create = fhirclass.FHIRClass.for_element(prop.enum)
                     enum_cls.module = prop.enum.name
                     prop.module_name = enum_cls.module
-                    if not enum_cls.name in needed:
+                    if enum_cls.name not in needed:
                         needed.add(enum_cls.name)
                         needs.append(enum_cls)
 
@@ -668,7 +664,7 @@ class FHIRStructureDefinition(object):
                         )
                     else:
                         prop.module_name = prop_cls.module
-                        if not prop_cls_name in needed:
+                        if prop_cls_name not in needed:
                             needed.add(prop_cls_name)
                             needs.append(prop_cls)
 
@@ -1204,8 +1200,5 @@ class FHIRElementMapping(object):
         pass
 
 
-def _is_string(element):
-    isstr = isinstance(element, str)
-    if not isstr and sys.version_info[0] < 3:  # Python 2.x has 'str' and 'unicode'
-        isstr = isinstance(element, basestring)
-    return isstr
+def _is_string(element) -> bool:
+    return isinstance(element, str)

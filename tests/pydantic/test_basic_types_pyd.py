@@ -1,5 +1,4 @@
 import typing
-import inspect
 import decimal
 import base64
 
@@ -45,6 +44,8 @@ def test_fhirdate():
     model = ExampleModel(date="1973-06")
     model = ExampleModel(date="1905-08-23")
 
+    del model
+
 
 def test_fhirdatetime():
     """Test FHIRDateTime
@@ -63,6 +64,8 @@ def test_fhirdatetime():
     model = ExampleModel(datetime="2015-02-07T13:28:17-05:00")
     model = ExampleModel(datetime="2017-01-01T00:00:00.000Z")
 
+    del model
+
 
 def test_fhirtime():
     """Test FHIRTime
@@ -75,6 +78,8 @@ def test_fhirtime():
         model = ExampleModel(time="13:28:17-05:00")
     model = ExampleModel(time="17:00:00")
 
+    del model
+
 
 def test_fhirinstant():
     """Test FHIRInstant
@@ -86,22 +91,26 @@ def test_fhirinstant():
     model = ExampleModel(instant="2017-01-01T00:00:00Z")
     model = ExampleModel(instant="2015-02-07T13:28:17.239+02:00")
 
+    del model
+
 
 def test_fhirbase64binary():
     """Test FHIRBase64Binary
     https://www.hl7.org/fhir/datatypes.html#base64binary"""
+
     message = "Foo Bar"
     message_bytes = message.encode("ascii")
     base64_bytes = base64.b64encode(message_bytes)
     base64_message = base64_bytes.decode("ascii")
     model = ExampleModel(base64=base64_message)
-
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(base64=message)
 
     model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk=")
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")
+
+    del model
 
 
 def test_fhiroid():
@@ -112,6 +121,8 @@ def test_fhiroid():
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(oid="foo")
 
+    del model
+
 
 def test_fhirid():
     """Test FHIRId
@@ -121,11 +132,15 @@ def test_fhirid():
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(fhir_id="?")
 
+    del model
+
 
 def test_decimal():
     """Test FHIRDecimal
     https://www.hl7.org/fhir/datatypes.html#decimal"""
+
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(decimal="FOO")
-
     model = ExampleModel(decimal=3.14000000000000012434497875801)
+
+    del model

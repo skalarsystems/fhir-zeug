@@ -2,7 +2,7 @@
 # All paths are relative to the `fhir-parser` directory. You may want to use
 # os.path.join() if the generator should work on Windows, too.
 
-from ..default.settings import *
+from ..default.settings import *  # noqa: F401, F403
 
 # Base URL for where to load specification data from
 specification_url = "http://hl7.org/fhir/R4"
@@ -15,11 +15,13 @@ write_resources = True
 tpl_resource_target = (
     "./fhirclient/models"  # target directory to write the generated class files to
 )
-tpl_codesystems_source = "codesystems.py.jinja2"  # the template to use as source when writing enums for CodeSystems; can be `None`
+# the template to use as source when writing enums for CodeSystems; can be `None`
+tpl_codesystems_source = "codesystems.py.jinja2"
 
 # factory methods
 write_factory = True
-tpl_factory_target = "../fhirclient/models/fhirelementfactory.py"  # where to write the generated factory to
+# where to write the generated factory to
+tpl_factory_target = "../fhirclient/models/fhirelementfactory.py"
 
 # unit tests
 write_unittests = False

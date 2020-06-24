@@ -1,10 +1,8 @@
-import io
 from pathlib import Path
-import os.path
+import requests
 import shutil
 import zipfile
 
-import requests
 
 from .logger import logger
 

@@ -8,8 +8,7 @@ from .generators.yaml_model import GeneratorConfig
 
 def generate(spec: FHIRSpec, output_directory: Path, generator_config: GeneratorConfig):
     """Generates code based on the spec and the generator.
-    
-    
+
     Args:
         spec: A parsed specification.
         output_directory: The directory where the output goes to.

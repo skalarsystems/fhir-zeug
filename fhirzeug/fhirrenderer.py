@@ -1,9 +1,7 @@
-import io
 import os
 import re
 import shutil
 import textwrap
-from pprint import pprint
 from typing import Optional, TextIO, TYPE_CHECKING
 from pathlib import Path
 from stringcase import snakecase  # type: ignore
@@ -69,7 +67,7 @@ class FHIRRenderer:
 
         try:
             template = self.jinjaenv.get_template(template_name)
-        except TemplateNotFound as e:
+        except TemplateNotFound:
             logger.error(
                 'Template "{}" not found in «{}», cannot render'.format(
                     template_name, self.settings.tpl_base
@@ -100,7 +98,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
     def copy_files(self, target_dir, f_out):
         """ Copy base resources to the target location, according to settings.
         """
-        for origpath, module, contains in self.settings.manual_profiles:
+        for origpath, _, _ in self.settings.manual_profiles:
             if not origpath:
                 continue
             filepath = os.path.join(*origpath.split("/"))
@@ -111,12 +109,12 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
                         shutil.copyfileobj(f_in, f_out)
 
                 else:
+                    tgt = os.path.join(target_dir, os.path.basename(filepath))
                     logger.info(
                         "Copying manual profiles in {} to {}".format(
                             os.path.basename(filepath), tgt
                         )
                     )
-                    tgt = os.path.join(target_dir, os.path.basename(filepath))
                     shutil.copyfile(filepath, tgt)
 
     def render(self, f_out):
@@ -166,14 +164,14 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             # }
 
             data = {"clazz": clazz}
-            ptrn = (
-                profile.targetname.lower()
-                if self.settings.resource_modules_lowercase
-                else profile.targetname
-            )
+            # ptrn = (
+            #     profile.targetname.lower()
+            #     if self.settings.resource_modules_lowercase
+            #     else profile.targetname
+            # )
             source_path = self.settings.tpl_resource_source
-            target_name = self.settings.tpl_resource_target_ptrn.format(ptrn)
-            target_path = os.path.join(self.settings.tpl_resource_target, target_name)
+            # target_name = self.settings.tpl_resource_target_ptrn.format(ptrn)
+            # target_path = os.path.join(self.settings.tpl_resource_target, target_name)
 
             self.do_render(data, source_path, None, f_out)
 
@@ -243,8 +241,8 @@ class FHIRValueSetRenderer(FHIRRenderer):
                 "info": self.spec.info,
                 "system": system,
             }
-            target_name = self.settings.tpl_codesystems_target_ptrn.format(system.name)
-            target_path = os.path.join(self.settings.tpl_resource_target, target_name)
+            # target_name = self.settings.tpl_codesystems_target_ptrn.format(system.name)
+            # target_path = os.path.join(self.settings.tpl_resource_target, target_name)
             self.do_render(data, self.settings.tpl_codesystems_source, None, f_out)
 
 

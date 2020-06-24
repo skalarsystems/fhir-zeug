@@ -1,4 +1,3 @@
-import sys
 import importlib
 from pathlib import Path
 
@@ -24,8 +23,8 @@ def main(
     dry_run: bool = False,
     load_only: bool = False,
     generator: str = "python_pydantic",
-    output_directory: Path = Path("output"),
-    download_cache: Path = Path("./downloads"),
+    output_directory: Path = Path("output"),  # noqa: B008
+    download_cache: Path = Path("./downloads"),  # noqa: B008
 ):
     """Download and parse FHIR resource definitions."""
 
@@ -38,11 +37,13 @@ def main(
     generator_path = Path(generator_settings.__file__).parent
     generator_config = load_generator_config(generator_path.joinpath("generator.yaml"))
 
-    setattr(generator_settings, "tpl_resource_target", str(output_directory))
+    setattr(  # noqa : B010
+        generator_settings, "tpl_resource_target", str(output_directory)
+    )
 
     # assure we have all files
     loader = SpecificationCache(
-        getattr(generator_settings, "specification_url"), download_cache
+        getattr(generator_settings, "specification_url"), download_cache  # noqa : B009
     )
     loader.sync(force_download=force_download)
 

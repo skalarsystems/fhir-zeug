@@ -1,20 +1,17 @@
 import os
-import pytest
 
 
 from fhirzeug.fhirspec import (
     FHIRSpec,
-    FHIRStructureDefinitionStructure,
     FHIRVersionInfo,
 )
-from fhirzeug.fhirclass import FHIRClass
 
 
 def test_writable_profiles(spec: FHIRSpec):
     check = any(
         item in spec.settings.manual_profiles for item in spec.writable_profiles()
     )
-    assert check == False
+    assert check is False
 
 
 def test_read_version(spec: FHIRSpec):
