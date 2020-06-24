@@ -38,10 +38,12 @@ def main(
     generator_path = Path(generator_settings.__file__).parent
     generator_config = load_generator_config(generator_path.joinpath("generator.yaml"))
 
-    generator_settings.tpl_resource_target = str(output_directory)
+    setattr(generator_settings, "tpl_resource_target", str(output_directory))
 
     # assure we have all files
-    loader = SpecificationCache(generator_settings.specification_url, download_cache)
+    loader = SpecificationCache(
+        getattr(generator_settings, "specification_url"), download_cache
+    )
     loader.sync(force_download=force_download)
 
     # parse

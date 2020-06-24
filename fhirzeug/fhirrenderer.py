@@ -4,13 +4,16 @@ import re
 import shutil
 import textwrap
 from pprint import pprint
-from typing import Optional, TextIO
+from typing import Optional, TextIO, TYPE_CHECKING
 from pathlib import Path
-from stringcase import snakecase
+from stringcase import snakecase  # type: ignore
 
 from jinja2 import Environment, PackageLoader, TemplateNotFound
 from jinja2.filters import environmentfilter
 from .logger import logger
+
+if TYPE_CHECKING:
+    from .fhirspec import FHIRSpec
 
 
 class FHIRRenderer:
@@ -59,7 +62,7 @@ class FHIRRenderer:
     ) -> None:
         """ Render the given data using a Jinja2 template, writing to the file
         at the target path.
-        
+
         :param template_name: The Jinja2 template to render, located in settings.tpl_base
         :param target_path: Output path
         """
@@ -74,9 +77,6 @@ class FHIRRenderer:
             )
             return
 
-        if not target_path and not f_out:
-            raise ValueError("No target filepath or file object provided")
-
         if target_path:
             dirpath = os.path.dirname(target_path)
 
@@ -84,6 +84,9 @@ class FHIRRenderer:
                 os.makedirs(dirpath)
 
             f_out = open(target_path, "w")
+
+        if f_out is None:
+            raise ValueError("No target filepath or file object provided")
 
         logger.info("Writing {}".format(target_path))
         rendered = template.render(data)
@@ -196,7 +199,7 @@ class FHIRFactoryRenderer(FHIRRenderer):
 class FHIRDependencyRenderer(FHIRRenderer):
     """ Puts down dependencies for each of the FHIR resources. Per resource
     class will grab all class/resource names that are needed for its
-    properties and add them to the "imports" key. Will also check 
+    properties and add them to the "imports" key. Will also check
     classes/resources may appear in references and list those in the
     "references" key.
     """

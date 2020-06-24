@@ -18,7 +18,7 @@ def safe_pathname(filename: str) -> str:
 
 class SpecificationCache(object):
     """ Class to download, cache and manage specifications.
-    
+
     Attributes:
         needs   The pre known content of a file
     """
@@ -32,9 +32,9 @@ class SpecificationCache(object):
         self.base_url = base_url
         self.cache_dir = cache_dir.joinpath(safe_pathname(base_url))
 
-    def sync(self, force_download: bool = False) -> Path:
+    def sync(self, force_download: bool = False):
         """ Makes sure all the files needed have been downloaded.
-        
+
         :returns: The path to the directory with all our files.
         """
 
@@ -60,7 +60,7 @@ class SpecificationCache(object):
 
     def download(self, remote: str, local: Path) -> None:
         """ Download the given file located on the server.
-        
+
         :returns: The local file name in our cache directory the file was
             downloaded to
         """
