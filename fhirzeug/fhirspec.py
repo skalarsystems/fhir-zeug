@@ -274,8 +274,11 @@ class FHIRSpec(object):
     def writable_profiles(self):
         """ Returns a list of `FHIRStructureDefinition` instances.
         """
-        return [profile for profile in self.profiles.values() 
-                if profile.manual_module is None]
+        return [
+            profile
+            for profile in self.profiles.values()
+            if profile.manual_module is None
+        ]
 
 
 class FHIRVersionInfo(object):
@@ -296,8 +299,8 @@ class FHIRVersionInfo(object):
         assert os.path.isfile(filepath)
         with io.open(filepath, "r", encoding="utf-8") as handle:
             for line in handle.readlines():
-                if line.startswith('FhirVersion'):
-                    return line.split('=', 2)[1].strip()
+                if line.startswith("FhirVersion"):
+                    return line.split("=", 2)[1].strip()
 
 
 class FHIRValueSetEnum(object):
@@ -515,7 +518,7 @@ class FHIRStructureDefinition(object):
 
     def read_profile(self, filepath):
         """ Read the JSON definition of a profile from disk and parse.
-        
+
         Not currently used.
         """
         profile = None
@@ -614,7 +617,7 @@ class FHIRStructureDefinition(object):
     def needed_external_classes(self):
         """ Returns a unique list of class items that are needed for any of the
         receiver's classes' properties and are not defined in this profile.
-        
+
         :raises: Will raise if called before `finalize` has been called.
         """
         if not self._did_finalize:
@@ -669,7 +672,7 @@ class FHIRStructureDefinition(object):
         """ Returns a unique list of **external** class names that are
         referenced from at least one of the receiver's `Reference`-type
         properties.
-        
+
         :raises: Will raise if called before `finalize` has been called.
         """
         if not self._did_finalize:
@@ -759,7 +762,8 @@ class FHIRStructureDefinitionElement(object):
         self.n_min = None
         self.n_max = None
         self.is_summary = False
-        self.summary_n_min_conflict = False  # to mark conflicts, see #13215 (http://gforge.hl7.org/gf/project/fhir/tracker/?action=TrackerItemEdit&tracker_item_id=13125)
+        # to mark conflicts, see #13215 (http://gforge.hl7.org/gf/project/fhir/tracker/?action=TrackerItemEdit&tracker_item_id=13125)
+        self.summary_n_min_conflict = False
         self.valueset = None
         self.enum = None  # assigned if the element has a binding to a ValueSet that is a CodeSystem generating an enum
 
