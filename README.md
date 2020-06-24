@@ -36,7 +36,6 @@ It will:
 - Parse it
 - Generate
   - source files for python pydantic
-  - unittests using pytest which try to read all example file from the specification.
   - a full python package also available (here)[https://pypi.org/project/pydantic-fhir/]).
 
 # Obsolete
