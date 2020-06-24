@@ -39,6 +39,10 @@ def test_fhirdate():
         model = ExampleModel(date="foo")
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(date="24:00")
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(date="1973-06-33")
+    model = ExampleModel(date="2018")
+    model = ExampleModel(date="1973-06")
     model = ExampleModel(date="1905-08-23")
 
 
@@ -49,7 +53,15 @@ def test_fhirdatetime():
         model = ExampleModel(datetime="foo")
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(datetime="24:00")
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(datetime="2015-02-07T13:28:17")
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(datetime="1905-08-33")
+    model = ExampleModel(datetime="2018")
+    model = ExampleModel(datetime="1973-06")
     model = ExampleModel(datetime="1905-08-23")
+    model = ExampleModel(datetime="2015-02-07T13:28:17-05:00")
+    model = ExampleModel(datetime="2017-01-01T00:00:00.000Z")
 
 
 def test_fhirtime():
@@ -59,6 +71,8 @@ def test_fhirtime():
         model = ExampleModel(time="foo")
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(time="24:00")
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(time="13:28:17-05:00")
     model = ExampleModel(time="17:00:00")
 
 
@@ -84,6 +98,10 @@ def test_fhirbase64binary():
 
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(base64=message)
+
+    model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk=")
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")
 
 
 def test_fhiroid():
