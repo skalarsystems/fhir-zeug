@@ -15,16 +15,16 @@ classmap = {
     "instant": "FHIRInstant",
     "time": "FHIRTime",
     "decimal": "decimal.Decimal",
-    "string": "str",
-    "markdown": "str",
+    "string": "FHIRString",
+    "markdown": "FHIRString",
     "id": "FHIRId",
     "code": "FHIRCode",  # for now we're not generating enums for these
-    "uri": "str",
-    "url": "str",
-    "canonical": "str",
+    "uri": "FHIRString",
+    "url": "FHIRString",
+    "canonical": "FHIRString",
     "oid": "FHIROid",
-    "uuid": "str",
-    "xhtml": "str",
+    "uuid": "FHIRString",
+    "xhtml": "FHIRString",
     "base64Binary": "FHIRBase64Binary",
 }
 
