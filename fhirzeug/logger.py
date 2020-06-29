@@ -7,7 +7,7 @@ def setup_logging():
 
     logging.root.setLevel(log_level)
     try:
-        from colorlog import ColoredFormatter
+        from colorlog import ColoredFormatter  # type: ignore
 
         logfmt = "  %(log_color)s%(levelname)-8s%(reset)s | %(log_color)s%(message)s%(reset)s"
         formatter = ColoredFormatter(logfmt)
@@ -19,7 +19,7 @@ def setup_logging():
         logger = logging.getLogger("fhirparser")
         logger.setLevel(log_level)
         logger.addHandler(stream)
-    except Exception as e:
+    except Exception:
         logging.info('Install "colorlog" to enable colored log messages')
 
 

@@ -1,4 +1,3 @@
-import pytest
 import pydantic
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     camelcase_alias_generator,

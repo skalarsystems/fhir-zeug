@@ -3,7 +3,7 @@
 # indicate directories: the parser will split them on '/' and use os.path to
 # make them platform independent.
 
-from .mappings import *
+from .mappings import *  # noqa: F401, F403
 
 
 # Base URL for where to load specification data from
@@ -18,13 +18,17 @@ tpl_base = "Sample"
 
 # Whether and where to put the generated class models
 write_resources = True
-tpl_resource_source = "resource.py.jinja2"  # the template to use as source when writing resource implementations for profiles
+# the template to use as source when writing resource implementations for profiles
+tpl_resource_source = "resource.py.jinja2"
 tpl_resource_target = (
     "../models"  # target directory to write the generated class files to
 )
-tpl_resource_target_ptrn = "{}.py"  # target class file name pattern, with one placeholder (`{}`) for the class name
-tpl_codesystems_source = "codesystems.py.jinja2"  # the template to use as source when writing enums for CodeSystems; can be `None`
-tpl_codesystems_target_ptrn = "{}.py"  # the filename pattern to use for generated code systems and value sets, with one placeholder (`{}`) for the class name
+# target class file name pattern, with one placeholder (`{}`) for the class name
+tpl_resource_target_ptrn = "{}.py"
+# the template to use as source when writing enums for CodeSystems; can be `None`
+tpl_codesystems_source = "codesystems.py.jinja2"
+# the filename pattern to use for generated code systems and value sets, with one placeholder (`{}`) for the class name
+tpl_codesystems_target_ptrn = "{}.py"
 
 # Whether and where to put the factory methods and the dependency graph
 write_factory = True
@@ -48,13 +52,11 @@ tpl_unittest_source = (
 tpl_unittest_target = (
     "../models"  # target directory to write the generated unit test files to
 )
-tpl_unittest_target_ptrn = "{}_tests.py"  # target file name pattern for unit tests; the one placeholder (`{}`) will be the class name
-unittest_copyfiles = (
-    []
-)  # array of file names to copy to the test directory `tpl_unittest_target` (e.g. unit test base classes)
 
-unittest_format_path_prepare = "{}"  # used to format `path` before appending another path element - one placeholder for `path`
-unittest_format_path_key = "{}.{}"  # used to create property paths by appending `key` to the existing `path` - two placeholders
+# used to format `path` before appending another path element - one placeholder for `path`
+unittest_format_path_prepare = "{}"
+# used to create property paths by appending `key` to the existing `path` - two placeholders
+unittest_format_path_key = "{}.{}"
 unittest_format_path_index = (
     "{}[{}]"  # used for array properties - two placeholders, `path` and the array index
 )

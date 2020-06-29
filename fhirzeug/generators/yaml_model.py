@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class CopyTarget(BaseModel):
     """A target to copy a file.
-    
+
     Attributes:
         destination: path where the file should copied to
     """
@@ -25,9 +25,9 @@ class Template(BaseModel):
 
 class GeneratorConfig(BaseModel):
     """Config for the generator. Each Generator for each language has one.
-    
+
     Attributes:
-        copy_examples: Target of where the 
+        copy_examples: Target of where the
         templates: *not in used yes*
         output_file: Where the generate file will be pushed.
     """

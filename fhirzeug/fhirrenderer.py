@@ -1,16 +1,17 @@
-import io
 import os
 import re
 import shutil
 import textwrap
-from pprint import pprint
-from typing import Optional, TextIO
+from typing import Optional, TextIO, TYPE_CHECKING
 from pathlib import Path
-from stringcase import snakecase
+from stringcase import snakecase  # type: ignore
 
 from jinja2 import Environment, PackageLoader, TemplateNotFound
 from jinja2.filters import environmentfilter
 from .logger import logger
+
+if TYPE_CHECKING:
+    from .fhirspec import FHIRSpec
 
 
 class FHIRRenderer:
@@ -59,23 +60,20 @@ class FHIRRenderer:
     ) -> None:
         """ Render the given data using a Jinja2 template, writing to the file
         at the target path.
-        
+
         :param template_name: The Jinja2 template to render, located in settings.tpl_base
         :param target_path: Output path
         """
 
         try:
             template = self.jinjaenv.get_template(template_name)
-        except TemplateNotFound as e:
+        except TemplateNotFound:
             logger.error(
                 'Template "{}" not found in «{}», cannot render'.format(
                     template_name, self.settings.tpl_base
                 )
             )
             return
-
-        if not target_path and not f_out:
-            raise ValueError("No target filepath or file object provided")
 
         if target_path:
             dirpath = os.path.dirname(target_path)
@@ -84,6 +82,9 @@ class FHIRRenderer:
                 os.makedirs(dirpath)
 
             f_out = open(target_path, "w")
+
+        if f_out is None:
+            raise ValueError("No target filepath or file object provided")
 
         logger.info("Writing {}".format(target_path))
         rendered = template.render(data)
@@ -97,7 +98,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
     def copy_files(self, target_dir, f_out):
         """ Copy base resources to the target location, according to settings.
         """
-        for origpath, module, contains in self.settings.manual_profiles:
+        for origpath, _, _ in self.settings.manual_profiles:
             if not origpath:
                 continue
             filepath = os.path.join(*origpath.split("/"))
@@ -108,12 +109,12 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
                         shutil.copyfileobj(f_in, f_out)
 
                 else:
+                    tgt = os.path.join(target_dir, os.path.basename(filepath))
                     logger.info(
                         "Copying manual profiles in {} to {}".format(
                             os.path.basename(filepath), tgt
                         )
                     )
-                    tgt = os.path.join(target_dir, os.path.basename(filepath))
                     shutil.copyfile(filepath, tgt)
 
     def render(self, f_out):
@@ -163,14 +164,14 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             # }
 
             data = {"clazz": clazz}
-            ptrn = (
-                profile.targetname.lower()
-                if self.settings.resource_modules_lowercase
-                else profile.targetname
-            )
+            # ptrn = (
+            #     profile.targetname.lower()
+            #     if self.settings.resource_modules_lowercase
+            #     else profile.targetname
+            # )
             source_path = self.settings.tpl_resource_source
-            target_name = self.settings.tpl_resource_target_ptrn.format(ptrn)
-            target_path = os.path.join(self.settings.tpl_resource_target, target_name)
+            # target_name = self.settings.tpl_resource_target_ptrn.format(ptrn)
+            # target_path = os.path.join(self.settings.tpl_resource_target, target_name)
 
             self.do_render(data, source_path, None, f_out)
 
@@ -196,7 +197,7 @@ class FHIRFactoryRenderer(FHIRRenderer):
 class FHIRDependencyRenderer(FHIRRenderer):
     """ Puts down dependencies for each of the FHIR resources. Per resource
     class will grab all class/resource names that are needed for its
-    properties and add them to the "imports" key. Will also check 
+    properties and add them to the "imports" key. Will also check
     classes/resources may appear in references and list those in the
     "references" key.
     """
@@ -240,8 +241,8 @@ class FHIRValueSetRenderer(FHIRRenderer):
                 "info": self.spec.info,
                 "system": system,
             }
-            target_name = self.settings.tpl_codesystems_target_ptrn.format(system.name)
-            target_path = os.path.join(self.settings.tpl_resource_target, target_name)
+            # target_name = self.settings.tpl_codesystems_target_ptrn.format(system.name)
+            # target_path = os.path.join(self.settings.tpl_resource_target, target_name)
             self.do_render(data, self.settings.tpl_codesystems_source, None, f_out)
 
 

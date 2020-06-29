@@ -1,5 +1,4 @@
 import typing
-import inspect
 import decimal
 import base64
 
@@ -43,7 +42,7 @@ def test_fhirdate():
         model = ExampleModel(date="1973-06-33")
     model = ExampleModel(date="2018")
     model = ExampleModel(date="1973-06")
-    model = ExampleModel(date="1905-08-23")
+    model = ExampleModel(date="1905-08-23")  # noqa : F841
 
 
 def test_fhirdatetime():
@@ -61,7 +60,7 @@ def test_fhirdatetime():
     model = ExampleModel(datetime="1973-06")
     model = ExampleModel(datetime="1905-08-23")
     model = ExampleModel(datetime="2015-02-07T13:28:17-05:00")
-    model = ExampleModel(datetime="2017-01-01T00:00:00.000Z")
+    model = ExampleModel(datetime="2017-01-01T00:00:00.000Z")  # noqa : F841
 
 
 def test_fhirtime():
@@ -73,7 +72,7 @@ def test_fhirtime():
         model = ExampleModel(time="24:00")
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(time="13:28:17-05:00")
-    model = ExampleModel(time="17:00:00")
+    model = ExampleModel(time="17:00:00")  # noqa : F841
 
 
 def test_fhirinstant():
@@ -84,24 +83,24 @@ def test_fhirinstant():
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(instant="24:00")
     model = ExampleModel(instant="2017-01-01T00:00:00Z")
-    model = ExampleModel(instant="2015-02-07T13:28:17.239+02:00")
+    model = ExampleModel(instant="2015-02-07T13:28:17.239+02:00")  # noqa : F841
 
 
 def test_fhirbase64binary():
     """Test FHIRBase64Binary
     https://www.hl7.org/fhir/datatypes.html#base64binary"""
+
     message = "Foo Bar"
     message_bytes = message.encode("ascii")
     base64_bytes = base64.b64encode(message_bytes)
     base64_message = base64_bytes.decode("ascii")
     model = ExampleModel(base64=base64_message)
-
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(base64=message)
 
     model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk=")
     with pytest.raises(pydantic.ValidationError):
-        model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")
+        model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")  # noqa : F841
 
 
 def test_fhiroid():
@@ -110,7 +109,7 @@ def test_fhiroid():
 
     model = ExampleModel(oid="urn:oid:1.2.3.4.5")
     with pytest.raises(pydantic.ValidationError):
-        model = ExampleModel(oid="foo")
+        model = ExampleModel(oid="foo")  # noqa : F841
 
 
 def test_fhirid():
@@ -119,13 +118,13 @@ def test_fhirid():
 
     model = ExampleModel(fhir_id="foo.bar")
     with pytest.raises(pydantic.ValidationError):
-        model = ExampleModel(fhir_id="?")
+        model = ExampleModel(fhir_id="?")  # noqa : F841
 
 
 def test_decimal():
     """Test FHIRDecimal
     https://www.hl7.org/fhir/datatypes.html#decimal"""
+
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(decimal="FOO")
-
-    model = ExampleModel(decimal=3.14000000000000012434497875801)
+    model = ExampleModel(decimal=3.14000000000000012434497875801)  # noqa : F841
