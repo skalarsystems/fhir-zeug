@@ -1,3 +1,4 @@
+import decimal
 import pydantic
 
 
@@ -5,6 +6,22 @@ def exact_regex_constr(**kwargs):
     if kwargs.get("regex") is not None:
         kwargs["regex"] = r"\A" + kwargs["regex"].lstrip(r"\A").rstrip(r"\Z") + r"\Z"
     return pydantic.constr(**kwargs)
+
+
+# TODO: remove
+class FHIRDecimal:
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        print(value, type(value))
+        return decimal.Decimal(str(value))
 
 
 FHIRString = pydantic.constr(strip_whitespace=True)
