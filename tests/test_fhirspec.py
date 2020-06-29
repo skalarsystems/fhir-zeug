@@ -46,3 +46,11 @@ def test_as_class_name(spec: FHIRSpec):
 def test_class_name_for_type_if_property(spec: FHIRSpec):
     class_name = spec.class_name_for_type_if_property("")
     assert class_name is None
+
+
+def test_class_name_for_profile(spec: FHIRSpec):
+    profile_name = "http://hl7.org/fhir/Profile/MyProfile"
+    class_name = "MyProfile"
+    assert spec.class_name_for_profile(None) is None
+    assert spec.class_name_for_profile(profile_name) == class_name
+    assert spec.class_name_for_profile([profile_name]) == [class_name]
