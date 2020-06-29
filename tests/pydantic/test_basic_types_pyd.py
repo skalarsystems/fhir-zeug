@@ -42,9 +42,7 @@ def test_fhirdate():
         model = ExampleModel(date="1973-06-33")
     model = ExampleModel(date="2018")
     model = ExampleModel(date="1973-06")
-    model = ExampleModel(date="1905-08-23")
-
-    del model
+    model = ExampleModel(date="1905-08-23")  # noqa : F841
 
 
 def test_fhirdatetime():
@@ -62,9 +60,7 @@ def test_fhirdatetime():
     model = ExampleModel(datetime="1973-06")
     model = ExampleModel(datetime="1905-08-23")
     model = ExampleModel(datetime="2015-02-07T13:28:17-05:00")
-    model = ExampleModel(datetime="2017-01-01T00:00:00.000Z")
-
-    del model
+    model = ExampleModel(datetime="2017-01-01T00:00:00.000Z")  # noqa : F841
 
 
 def test_fhirtime():
@@ -76,9 +72,7 @@ def test_fhirtime():
         model = ExampleModel(time="24:00")
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(time="13:28:17-05:00")
-    model = ExampleModel(time="17:00:00")
-
-    del model
+    model = ExampleModel(time="17:00:00")  # noqa : F841
 
 
 def test_fhirinstant():
@@ -89,9 +83,7 @@ def test_fhirinstant():
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(instant="24:00")
     model = ExampleModel(instant="2017-01-01T00:00:00Z")
-    model = ExampleModel(instant="2015-02-07T13:28:17.239+02:00")
-
-    del model
+    model = ExampleModel(instant="2015-02-07T13:28:17.239+02:00")  # noqa : F841
 
 
 def test_fhirbase64binary():
@@ -108,9 +100,7 @@ def test_fhirbase64binary():
 
     model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk=")
     with pytest.raises(pydantic.ValidationError):
-        model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")
-
-    del model
+        model = ExampleModel(base64="2jmj7l5rSw0yVb/vlWAYkK/YBwk")  # noqa : F841
 
 
 def test_fhiroid():
@@ -119,9 +109,7 @@ def test_fhiroid():
 
     model = ExampleModel(oid="urn:oid:1.2.3.4.5")
     with pytest.raises(pydantic.ValidationError):
-        model = ExampleModel(oid="foo")
-
-    del model
+        model = ExampleModel(oid="foo")  # noqa : F841
 
 
 def test_fhirid():
@@ -130,9 +118,7 @@ def test_fhirid():
 
     model = ExampleModel(fhir_id="foo.bar")
     with pytest.raises(pydantic.ValidationError):
-        model = ExampleModel(fhir_id="?")
-
-    del model
+        model = ExampleModel(fhir_id="?")  # noqa : F841
 
 
 def test_decimal():
@@ -141,6 +127,4 @@ def test_decimal():
 
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(decimal="FOO")
-    model = ExampleModel(decimal=3.14000000000000012434497875801)
-
-    del model
+    model = ExampleModel(decimal=3.14000000000000012434497875801)  # noqa : F841
