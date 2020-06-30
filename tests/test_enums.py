@@ -1,6 +1,3 @@
-import pytest
-
-
 from fhirzeug.generators.python_pydantic.templates.resource_header import DocEnum
 from fhirzeug.fhirspec import FHIRSpec
 

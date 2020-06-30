@@ -15,11 +15,13 @@ write_resources = True
 tpl_resource_target = (
     "./fhirclient/models"  # target directory to write the generated class files to
 )
-tpl_codesystems_source = None  # the template to use as source when writing enums for CodeSystems; can be `None`
+# the template to use as source when writing enums for CodeSystems; can be `None`
+tpl_codesystems_source = "None"
 
 # factory methods
 write_factory = True
-tpl_factory_target = "../fhirclient/models/fhirelementfactory.py"  # where to write the generated factory to
+# where to write the generated factory to
+tpl_factory_target = "../fhirclient/models/fhirelementfactory.py"
 
 # unit tests
 write_unittests = False

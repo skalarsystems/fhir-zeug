@@ -47,9 +47,15 @@ jobs:
         run: poetry install
         if: steps.cache.outputs.cache-hit != 'true'
 
-      # step by step
-      # - name: Code Quality Black
-      #   run: poetry run black . --check
+      # Code quality
+      - name: Code Quality Black
+        run: poetry run black . --check
+
+      - name: Code quality Flake8
+        run: poetry run flake8 .
+
+      - name: Typing check mypy
+        run: poetry run mypy .
 
       - name: Test with pytest
         run: poetry run pytest --cov=fhirzeug tests -n 2 --cov-report xml

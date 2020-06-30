@@ -1,5 +1,5 @@
 from .logger import logger
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .fhirspec import FHIRStructureDefinitionElement, FHIRElementType
@@ -26,7 +26,7 @@ class FHIRClass:
         return klass, True
 
     @classmethod
-    def with_name(cls, class_name) -> str:
+    def with_name(cls, class_name) -> Optional["FHIRClass"]:
         return cls.known.get(class_name)
 
     def __init__(self, element, class_name):
@@ -39,12 +39,12 @@ class FHIRClass:
         self.superclass_name: str = element.superclass_name
         self.short: str = element.definition.short
         self.formal: str = element.definition.formal
-        self.properties: "FHIRClassProperty" = []
-        self.expanded_nonoptionals = {}
+        self.properties: List["FHIRClassProperty"] = []
+        self.expanded_nonoptionals: Dict[str, List["FHIRClassProperty"]] = {}
 
     def add_property(self, prop: "FHIRClassProperty") -> None:
         """ Add a property to the receiver.
-        
+
         :param FHIRClassProperty prop: A FHIRClassProperty instance
         """
         assert isinstance(prop, FHIRClassProperty)
@@ -68,20 +68,20 @@ class FHIRClass:
 
         if prop.nonoptional:
             if prop.choice_of_type is not None:
-                existing = (
+                existing_nonoptional = (
                     self.expanded_nonoptionals[prop.choice_of_type]
                     if prop.choice_of_type in self.expanded_nonoptionals
                     else []
                 )
-                existing.append(prop)
+                existing_nonoptional.append(prop)
                 self.expanded_nonoptionals[prop.choice_of_type] = sorted(
-                    existing, key=lambda x: x.name
+                    existing_nonoptional, key=lambda x: x.name
                 )
             else:
                 self.expanded_nonoptionals[prop.name] = [prop]
 
     @property
-    def nonexpanded_properties(self) -> List["FHIRProperty"]:
+    def nonexpanded_properties(self) -> List["FHIRClassProperty"]:
         nonexpanded = []
         included = set()
         for prop in self.properties:
@@ -219,7 +219,7 @@ class FHIRClassProperty:
         self,
         element: "FHIRStructureDefinitionElement",
         type_obj: "FHIRElementType",
-        type_name: str = None,
+        type_name: Optional[str] = None,
     ):
 
         assert (
@@ -230,7 +230,7 @@ class FHIRClassProperty:
         self.path = element.path
 
         # https://www.hl7.org/fhir/formats.html#choice
-        self.choice_of_type = (
+        self.choice_of_type: Optional[str] = (
             None  # assign if this property has been expanded from "property[x]"
         )
         if not type_name:
@@ -238,15 +238,16 @@ class FHIRClassProperty:
 
         name = element.definition.prop_name
         if "[x]" in name:
+            assert type_name is not None
             self.choice_of_type = spec.safe_property_name(name.replace("[x]", ""))
             name = name.replace(
                 "[x]", "{}{}".format(type_name[:1].upper(), type_name[1:])
             )
 
-        self.orig_name = name
-        self.name = spec.safe_property_name(name)
-        self.parent_name = element.parent_name
-        self.class_name = spec.class_name_for_type_if_property(type_name)
+        self.orig_name: str = name
+        self.name: str = spec.safe_property_name(name)
+        self.parent_name: str = element.parent_name
+        self.class_name: str = spec.class_name_for_type_if_property(type_name)
         self.enum = element.enum if "code" == type_name else None
         self.module_name = (
             None  # should only be set if it's an external module (think Python)
@@ -258,11 +259,11 @@ class FHIRClassProperty:
         self.is_array = True if "*" == element.n_max else False
         self.is_summary = element.is_summary
         self.is_summary_n_min_conflict = element.summary_n_min_conflict
-        self.nonoptional = (
+        self.nonoptional: bool = (
             True if element.n_min is not None and 0 != int(element.n_min) else False
         )
-        self.is_optional = not self.nonoptional
-        self.reference_to_names = (
+        self.is_optional: bool = not self.nonoptional
+        self.reference_to_names: List[str] = (
             [spec.class_name_for_profile(type_obj.profile)]
             if type_obj.profile is not None
             else []
@@ -289,15 +290,15 @@ class FHIRClassProperty:
         return doc
 
     @property
-    def desired_classname(self):
+    def desired_classname(self) -> str:
         return self.enum.name if self.enum is not None else self.class_name
 
     @property
-    def nonexpanded_name(self):
+    def nonexpanded_name(self) -> str:
         return self.choice_of_type if self.choice_of_type is not None else self.name
 
     @property
-    def nonexpanded_classname(self):
+    def nonexpanded_classname(self) -> Optional[str]:
         if (
             self.choice_of_type is not None
         ):  # We leave it up to the template to supply a class name in this case

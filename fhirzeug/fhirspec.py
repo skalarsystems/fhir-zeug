@@ -4,17 +4,13 @@
 import io
 import os
 import re
-import sys
-import glob
 import json
 import datetime
-import shutil
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 
 from .logger import logger
-from . import fhirclass, fhirrenderer
-from .generators.yaml_model import GeneratorConfig
+from . import fhirclass
 
 
 # TODO: check
@@ -54,7 +50,7 @@ class FHIRSpec(object):
         self.read_valuesets()
         self.handle_manual_profiles()
 
-    def read_bundle_resources(self, filename):
+    def read_bundle_resources(self, filename: str):
         """ Return an array of the Bundle's entry's "resource" elements.
         """
         logger.info("Reading {}".format(filename))
@@ -163,7 +159,7 @@ class FHIRSpec(object):
         """ Creates in-memory representations for all our manually defined
         profiles.
         """
-        for filepath, module, contains in self.settings.manual_profiles:
+        for _, module, contains in self.settings.manual_profiles:
             for contained in contains:
                 profile = FHIRStructureDefinition(self, None)
                 profile.manual_module = module
@@ -182,21 +178,23 @@ class FHIRSpec(object):
         to perform additional actions, like looking up class implementations
         from different profiles.
         """
-        for key, prof in self.profiles.items():
+        for _, prof in self.profiles.items():
             prof.finalize()
 
     # MARK: Naming Utilities
 
-    def as_module_name(self, name):
+    def as_module_name(self, name: str) -> str:
         return (
             name.lower() if name and self.settings.resource_modules_lowercase else name
         )
 
-    def as_class_name(self, classname, parent_name=None):
+    def as_class_name(
+        self, classname: Optional[str], parent_name: Optional[str] = None
+    ) -> Optional[str]:
         """ This method formulates a class name from the given arguments,
         applying formatting according to settings.
         """
-        if not classname or 0 == len(classname):
+        if classname is None or len(classname) == 0:
             return None
 
         # if we have a parent, do we have a mapped class?
@@ -215,20 +213,24 @@ class FHIRSpec(object):
             return classname[:1].upper() + classname[1:]
         return classname
 
-    def class_name_for_type(self, type_name, parent_name=None):
+    def class_name_for_type(
+        self, type_name: str, parent_name: Optional[str] = None
+    ) -> Optional[str]:
         return self.as_class_name(type_name, parent_name)
 
-    def class_name_for_type_if_property(self, type_name):
+    def class_name_for_type_if_property(self, type_name: str) -> Optional[str]:
         classname = self.class_name_for_type(type_name)
         if not classname:
             return None
         return self.settings.replacemap.get(classname, classname)
 
-    def class_name_for_profile(self, profile_name):
+    def class_name_for_profile(
+        self, profile_name: Optional[Union[List[str], str]]
+    ) -> Optional[Union[List[Optional[str]], str]]:
         if not profile_name:
             return None
         # TODO need to figure out what to do with this later. Annotation author supports multiples types that caused this to fail
-        if isinstance(profile_name, (list,)) and len(profile_name) > 0:
+        if isinstance(profile_name, (list,)):
             classnames = []
             for name_part in profile_name:
                 classnames.append(
@@ -240,13 +242,13 @@ class FHIRSpec(object):
         ]  # may be the full Profile URI, like http://hl7.org/fhir/Profile/MyProfile
         return self.as_class_name(type_name)
 
-    def class_name_is_native(self, class_name):
+    def class_name_is_native(self, class_name: str) -> bool:
         return class_name in self.settings.natives
 
-    def safe_property_name(self, prop_name):
+    def safe_property_name(self, prop_name: str) -> str:
         return self.settings.reservedmap.get(prop_name, prop_name)
 
-    def safe_enum_name(self, enum_name, ucfirst=False):
+    def safe_enum_name(self, enum_name: str, ucfirst: bool = False) -> str:
         """ """
 
         assert enum_name, "Must have a name"
@@ -266,7 +268,7 @@ class FHIRSpec(object):
 
         return self.settings.reservedmap.get(name, name)
 
-    def json_class_for_class_name(self, class_name):
+    def json_class_for_class_name(self, class_name: str) -> str:
         return self.settings.jsonmap.get(class_name, self.settings.jsonmap_default)
 
     # MARK: Writing Data
@@ -274,8 +276,11 @@ class FHIRSpec(object):
     def writable_profiles(self):
         """ Returns a list of `FHIRStructureDefinition` instances.
         """
-        return [profile for profile in self.profiles.values() 
-                if profile.manual_module is None]
+        return [
+            profile
+            for profile in self.profiles.values()
+            if profile.manual_module is None
+        ]
 
 
 class FHIRVersionInfo(object):
@@ -296,8 +301,8 @@ class FHIRVersionInfo(object):
         assert os.path.isfile(filepath)
         with io.open(filepath, "r", encoding="utf-8") as handle:
             for line in handle.readlines():
-                if line.startswith('FhirVersion'):
-                    return line.split('=', 2)[1].strip()
+                if line.startswith("FhirVersion"):
+                    return line.split("=", 2)[1].strip()
 
 
 class FHIRValueSetEnum(object):
@@ -464,11 +469,11 @@ class FHIRCodeSystem(object):
                 return None
 
             cd = c["code"]
-            name = (
-                "{}-{}".format(prefix, cd)
-                if prefix and not cd.startswith(prefix)
-                else cd
-            )
+            # name = (
+            #     "{}-{}".format(prefix, cd)
+            #     if prefix and not cd.startswith(prefix)
+            #     else cd
+            # )
             code_name = self.spec.safe_enum_name(cd)
             if len(code_name) < 1:
                 raise Exception(
@@ -515,7 +520,7 @@ class FHIRStructureDefinition(object):
 
     def read_profile(self, filepath):
         """ Read the JSON definition of a profile from disk and parse.
-        
+
         Not currently used.
         """
         profile = None
@@ -614,7 +619,7 @@ class FHIRStructureDefinition(object):
     def needed_external_classes(self):
         """ Returns a unique list of class items that are needed for any of the
         receiver's classes' properties and are not defined in this profile.
-        
+
         :raises: Will raise if called before `finalize` has been called.
         """
         if not self._did_finalize:
@@ -642,7 +647,7 @@ class FHIRStructureDefinition(object):
                     enum_cls, did_create = fhirclass.FHIRClass.for_element(prop.enum)
                     enum_cls.module = prop.enum.name
                     prop.module_name = enum_cls.module
-                    if not enum_cls.name in needed:
+                    if enum_cls.name not in needed:
                         needed.add(enum_cls.name)
                         needs.append(enum_cls)
 
@@ -659,7 +664,7 @@ class FHIRStructureDefinition(object):
                         )
                     else:
                         prop.module_name = prop_cls.module
-                        if not prop_cls_name in needed:
+                        if prop_cls_name not in needed:
                             needed.add(prop_cls_name)
                             needs.append(prop_cls)
 
@@ -669,7 +674,7 @@ class FHIRStructureDefinition(object):
         """ Returns a unique list of **external** class names that are
         referenced from at least one of the receiver's `Reference`-type
         properties.
-        
+
         :raises: Will raise if called before `finalize` has been called.
         """
         if not self._did_finalize:
@@ -759,7 +764,8 @@ class FHIRStructureDefinitionElement(object):
         self.n_min = None
         self.n_max = None
         self.is_summary = False
-        self.summary_n_min_conflict = False  # to mark conflicts, see #13215 (http://gforge.hl7.org/gf/project/fhir/tracker/?action=TrackerItemEdit&tracker_item_id=13125)
+        # to mark conflicts, see #13215 (http://gforge.hl7.org/gf/project/fhir/tracker/?action=TrackerItemEdit&tracker_item_id=13125)
+        self.summary_n_min_conflict = False
         self.valueset = None
         self.enum = None  # assigned if the element has a binding to a ValueSet that is a CodeSystem generating an enum
 
@@ -1131,7 +1137,7 @@ class FHIRElementType(object):
 
         if self.code is None:
             raise Exception(f"No element type code found in {type_dict}")
-        if not _is_string(self.code):
+        if not isinstance(self.code, str):
             raise Exception(
                 "Expecting a string for 'code' definition of an element type, got {} as {}".format(
                     self.code, type(self.code)
@@ -1141,7 +1147,7 @@ class FHIRElementType(object):
             self.profile = type_dict.get("targetProfile")
             if (
                 self.profile is not None
-                and not _is_string(self.profile)
+                and not isinstance(self.profile, str)
                 and not isinstance(type_dict.get("targetProfile"), (list,))
             ):  # Added a check to make sure the targetProfile wasn't a list
                 raise Exception(
@@ -1192,10 +1198,3 @@ class FHIRElementMapping(object):
 
     def __init__(self, mapping_arr):
         pass
-
-
-def _is_string(element):
-    isstr = isinstance(element, str)
-    if not isstr and sys.version_info[0] < 3:  # Python 2.x has 'str' and 'unicode'
-        isstr = isinstance(element, basestring)
-    return isstr

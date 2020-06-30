@@ -1,4 +1,3 @@
-from filecmp import dircmp
 from pathlib import Path
 
 from fhirzeug.generator import generate

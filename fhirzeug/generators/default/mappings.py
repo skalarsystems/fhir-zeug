@@ -1,9 +1,11 @@
+import typing
+
 # Mappings for the FHIR class generator.
 #
 # This should be useable as-is for Python classes.
 
 # Which class names to map to resources and elements
-classmap = {
+classmap: typing.Dict[str, str] = {
     "Any": "Resource",
     "Practitioner.role": "PractRole",  # to avoid Practinioner.role and PractitionerRole generating the same class
     "boolean": "bool",
@@ -29,7 +31,7 @@ classmap = {
 }
 
 # Classes to be replaced with different ones at resource rendering time
-replacemap = {
+replacemap: typing.Dict[str, str] = {
     # "Reference": "FHIRReference",  # `FHIRReference` adds dereferencing capabilities
 }
 
@@ -37,7 +39,7 @@ replacemap = {
 natives = ["bool", "int", "float", "str", "dict", "decimal"]
 
 # Which classes are to be expected from JSON decoding
-jsonmap = {
+jsonmap: typing.Dict[str, str] = {
     "str": "str",
     "int": "int",
     "bool": "bool",
@@ -47,7 +49,7 @@ jsonmap = {
 jsonmap_default = "dict"
 
 # Properties that need to be renamed because of language keyword conflicts
-reservedmap = {
+reservedmap: typing.Dict[str, str] = {
     "for": "for_",
     "from": "from_",
     "class": "class_",
@@ -64,7 +66,7 @@ reservedmap = {
 }
 
 # For enum codes where a computer just cannot generate reasonable names
-enum_map = {
+enum_map: typing.Dict[str, str] = {
     "=": "eq",
     "!=": "ne",
     "<": "lt",
@@ -75,11 +77,11 @@ enum_map = {
 }
 
 # If you want to give specific names to enums based on their URI
-enum_namemap = {
+enum_namemap: typing.Dict[str, str] = {
     # 'http://hl7.org/fhir/coverage-exception': 'CoverageExceptionCodes',
 }
 
 # If certain CodeSystems don't need to generate an enum
-enum_ignore = {
+enum_ignore: typing.Dict[str, str] = {
     # 'http://hl7.org/fhir/resource-type-link',
 }
