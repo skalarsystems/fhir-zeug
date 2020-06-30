@@ -25,10 +25,17 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
         {%- set type_name = "\"{}\"".format(type_name) %}
     {%- endif %}
     {%- if prop.is_array %}
-        {%- set type_name = "typing.List[{}]".format(type_name) %}
+        {%- if type_name == "FHIRString" %}{# all strings inside of arrays should be not empty #}
+            {%- set type_name = 'typing.List[FHIRRequiredString]' %}
+        {%- else %}
+            {%- set type_name = "typing.List[{}]".format(type_name) %}
+        {%- endif %}
     {%- endif %}
     {%- if prop.is_optional or prop.choice_of_type %}{# one of many https://www.hl7.org/fhir/formats.html#choice #}
         {%- set type_name = "typing.Optional[{}]".format(type_name) %}
+    {%- endif %}
+    {%- if type_name == "FHIRString" and not prop.is_optional %}{# required strings should be not empty #}
+        {%- set type_name = "FHIRRequiredString" %}
     {%- endif %}
     {{ prop.name | snake_case }}: {{ type_name }}
 

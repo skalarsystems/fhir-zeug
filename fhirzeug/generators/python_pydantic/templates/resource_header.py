@@ -56,6 +56,17 @@ class DocEnum(enum.Enum):
         return obj
 
 
+def decimal_to_json(value: decimal.Decimal) -> typing.Union[float, int]:
+    """Convert a decimal to float or int, depending on if it has a decimal part.
+    
+    It is for JSON serialization - to serialize it in the same form as was
+    originally provided.
+    """
+    if value.as_tuple().exponent == 0:
+        return int(value)
+    return float(value)
+
+
 class FHIRAbstractBase(pydantic.BaseModel):
     """Abstract base class for all FHIR elements.
     """
@@ -67,6 +78,12 @@ class FHIRAbstractBase(pydantic.BaseModel):
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
+        json_encoders = {
+            # Pydantic by default converts decimals to floats in JSON output
+            # (adding `.0` for ints). We przefer to leave them in the original
+            # form.
+            decimal.Decimal: decimal_to_json
+        }
 
 
 def _without_empty_items(obj: typing.Any):
