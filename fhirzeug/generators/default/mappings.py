@@ -36,7 +36,7 @@ replacemap: typing.Dict[str, str] = {
 }
 
 # Which class names are native to the language (or can be treated this way)
-natives = ["bool", "int", "float", "str", "dict", "decimal"]
+natives = ["bool", "int", "float", "str", "dict", "decimal.Decimal", "FHIRString"]
 
 # Which classes are to be expected from JSON decoding
 jsonmap: typing.Dict[str, str] = {
