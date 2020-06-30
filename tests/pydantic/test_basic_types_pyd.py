@@ -51,7 +51,7 @@ def test_fhirstring():
 
 def test_fhirrequiredstring():
     """Test FHIRRequiredString
-    
+
     It's a variant of FHIRString which requires at least one non-whitespace
     character.
     """
