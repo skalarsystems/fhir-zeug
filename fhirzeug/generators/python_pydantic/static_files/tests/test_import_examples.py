@@ -17,6 +17,8 @@ NOT_WORKING = {
     "activitydefinition-predecessor-example.json",  # _event
 }
 
+# Some .json files require preprocessing because they have whitespace at the end
+# of strings, which is removed by pydantic-fhir.
 REQUIRES_WHITESPACE_PREPROCESSING = {
     "measure-cms146-example.json",
     "medicinalproductpackaged-example.json",
@@ -25,6 +27,7 @@ REQUIRES_WHITESPACE_PREPROCESSING = {
 
 
 def preprocess_whitespace(obj: typing.Any) -> typing.Any:
+    """Remove the leading and trailing whitespace from strings in the object."""
     if isinstance(obj, str):
         return obj.strip()
 

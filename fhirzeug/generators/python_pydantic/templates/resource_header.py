@@ -78,7 +78,12 @@ class FHIRAbstractBase(pydantic.BaseModel):
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
-        json_encoders = {decimal.Decimal: decimal_to_json}
+        json_encoders = {
+            # Pydantic by default converts decimals to floats in JSON output
+            # (adding `.0` for ints). We przefer to leave them in the original
+            # form.
+            decimal.Decimal: decimal_to_json
+        }
 
 
 def _without_empty_items(obj: typing.Any):
