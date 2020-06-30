@@ -3,23 +3,26 @@
 class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     """ {{ clazz.short|wordwrap(width=75, wrapstring="\n    ") }}.
 {%- if clazz.formal %}
-    
+
     {{ clazz.formal|wordwrap(width=75, wrapstring="\n    ") }}
 {%- endif %}
     """
+
 {%- if clazz.resource_type %}
     resource_type = "{{ clazz.resource_type }}"
 {%- endif %}
 
+    _META: "FHIRMeta" = FHIRMeta(
+        profile=[
+        {% for url in clazz.urls %}   "{{url}}",
+        {% endfor%}],
+    )
 
-
-    # {{clazz.properties}}
-  
 {% set enums = [] %}
 {% for prop in clazz.properties %}
     {%- if prop.enum %}
         {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
-    {% endif %}  
+    {% endif %}
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
         {%- set type_name = "\"{}\"".format(type_name) %}
