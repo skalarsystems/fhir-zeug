@@ -31,4 +31,4 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.black]
-exclude = "fhirzeug/generators/python/|fhirzeug/generators/python_pydantic/templates/"
+exclude = "fhirzeug/generators/python_pydantic/templates/"
