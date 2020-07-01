@@ -70,13 +70,8 @@ manual_profiles:
     contains  :
       - FHIRAbstractResource
 
-  # - origpath  : ./fhirzeug/generators/python_pydantic/templates/fhirreference.py
-  #   module    : fhirreference
-  #   contains  :
-  #     - FHIRReference
-
   - origpath  : ./fhirzeug/generators/python_pydantic/templates/fhir_basic_types.py
-    module    : fhirdate",
+    module    : fhirdate
     contains  :
       - date
       - dateTime
