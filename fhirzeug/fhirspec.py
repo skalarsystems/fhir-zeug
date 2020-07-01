@@ -7,11 +7,13 @@ import re
 import json
 import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, TYPE_CHECKING
 
 from .logger import logger
 from . import fhirclass
 
+if TYPE_CHECKING:
+    from .generators.yaml_model import GeneratorConfig
 
 # TODO: check
 # allow to skip some profiles by matching against their url (used while WiP)
@@ -24,22 +26,22 @@ class FHIRSpec(object):
     """ The FHIR specification.
     """
 
-    def __init__(self, directory: Path, settings, generator_module: str):
-        assert os.path.isdir(directory)
-        assert settings is not None
+    def __init__(self, directory: Path, generator_config: "GeneratorConfig"):
+        assert directory.is_dir()
         self.directory = directory
-        self.settings = settings
+        self.generator_config = generator_config
         self.info = FHIRVersionInfo(self, directory)
-        self.valuesets: Dict[str, "FHIRValueSet"] = {}  # system-url: FHIRValueSet()
-        self.codesystems: Dict[
-            str, "FHIRCodeSystem"
-        ] = {}  # system-url: FHIRCodeSystem()
-        self.profiles: Dict[
-            str, "FHIRStructureDefinition"
-        ] = {}  # profile-name: FHIRStructureDefinition()
 
-        self.generator_module = generator_module
+        # system-url: FHIRValueSet()
+        self.valuesets: Dict[str, "FHIRValueSet"] = {}
 
+        # system-url: FHIRCodeSystem()
+        self.codesystems: Dict[str, "FHIRCodeSystem"] = {}
+
+        # profile-name: FHIRStructureDefinition()
+        self.profiles: Dict[str, "FHIRStructureDefinition"] = {}
+
+        # Load profiles
         self.prepare()
         self.read_profiles()
         self.finalize()
@@ -101,7 +103,7 @@ class FHIRSpec(object):
         )
 
     def found_codesystem(self, codesystem):
-        if codesystem.url not in self.settings.enum_ignore:
+        if codesystem.url not in self.generator_config.mapping_rules.enum_ignore:
             self.codesystems[codesystem.url] = codesystem
 
     def valueset_with_uri(self, uri):
@@ -159,10 +161,10 @@ class FHIRSpec(object):
         """ Creates in-memory representations for all our manually defined
         profiles.
         """
-        for _, module, contains in self.settings.manual_profiles:
-            for contained in contains:
+        for manual_profile in self.generator_config.manual_profiles:
+            for contained in manual_profile.contains:
                 profile = FHIRStructureDefinition(self, None)
-                profile.manual_module = module
+                profile.manual_module = manual_profile.module
 
                 prof_dict = {
                     "name": contained,
@@ -184,15 +186,16 @@ class FHIRSpec(object):
     # MARK: Naming Utilities
 
     def as_module_name(self, name: str) -> str:
-        return (
-            name.lower() if name and self.settings.resource_modules_lowercase else name
-        )
+        if self.generator_config.naming_rules.resource_modules_lowercase:
+            return name.lower()
+        else:
+            return name
 
     def as_class_name(
         self, classname: Optional[str], parent_name: Optional[str] = None
     ) -> Optional[str]:
         """ This method formulates a class name from the given arguments,
-        applying formatting according to settings.
+        applying formatting according to config.
         """
         if classname is None or len(classname) == 0:
             return None
@@ -201,15 +204,16 @@ class FHIRSpec(object):
         pathname = (
             "{}.{}".format(parent_name, classname) if parent_name is not None else None
         )
-        if pathname is not None and pathname in self.settings.classmap:
-            return self.settings.classmap[pathname]
+        classmap = self.generator_config.mapping_rules.classmap
+        if pathname is not None and pathname in classmap:
+            return classmap[pathname]
 
         # is our plain class mapped?
-        if classname in self.settings.classmap:
-            return self.settings.classmap[classname]
+        if classname in classmap:
+            return classmap[classname]
 
         # CamelCase or just plain
-        if self.settings.camelcase_classes:
+        if self.generator_config.naming_rules.camelcase_classes:
             return classname[:1].upper() + classname[1:]
         return classname
 
@@ -222,7 +226,7 @@ class FHIRSpec(object):
         classname = self.class_name_for_type(type_name)
         if not classname:
             return None
-        return self.settings.replacemap.get(classname, classname)
+        return self.generator_config.mapping_rules.replacemap.get(classname, classname)
 
     def class_name_for_profile(
         self, profile_name: Optional[Union[List[str], str]]
@@ -243,20 +247,20 @@ class FHIRSpec(object):
         return self.as_class_name(type_name)
 
     def class_name_is_native(self, class_name: str) -> bool:
-        return class_name in self.settings.natives
+        return class_name in self.generator_config.mapping_rules.natives
 
     def safe_property_name(self, prop_name: str) -> str:
-        return self.settings.reservedmap.get(prop_name, prop_name)
+        return self.generator_config.mapping_rules.reservedmap.get(prop_name, prop_name)
 
     def safe_enum_name(self, enum_name: str, ucfirst: bool = False) -> str:
         """ """
 
         assert enum_name, "Must have a name"
 
-        name = self.settings.enum_map.get(enum_name, enum_name)
+        name = self.generator_config.mapping_rules.enum_map.get(enum_name, enum_name)
         parts = re.split(r"\W+", name)
 
-        if self.settings.camelcase_enums:
+        if self.generator_config.naming_rules.camelcase_enums:
             name = "".join([n[:1].upper() + n[1:] for n in parts])
             if not ucfirst and name.upper() != name:
                 name = name[:1].lower() + name[1:]
@@ -266,10 +270,12 @@ class FHIRSpec(object):
         if re.match(r"^\d", name):
             name = f"_{name}"
 
-        return self.settings.reservedmap.get(name, name)
+        return self.generator_config.mapping_rules.reservedmap.get(name, name)
 
     def json_class_for_class_name(self, class_name: str) -> str:
-        return self.settings.jsonmap.get(class_name, self.settings.jsonmap_default)
+        return self.generator_config.mapping_rules.jsonmap.get(
+            class_name, self.generator_config.mapping_rules.jsonmap_default
+        )
 
     # MARK: Writing Data
 
@@ -419,8 +425,8 @@ class FHIRCodeSystem(object):
         self.spec = spec
         self.definition = resource
         self.url = resource.get("url")
-        if self.url in self.spec.settings.enum_namemap:
-            self.name = self.spec.settings.enum_namemap[self.url]
+        if self.url in self.spec.generator_config.mapping_rules.enum_namemap:
+            self.name = self.spec.generator_config.mapping_rules.enum_namemap[self.url]
         else:
             self.name = self.spec.safe_enum_name(resource.get("name"), ucfirst=True)
         if len(self.name) < 1:
@@ -941,9 +947,9 @@ class FHIRStructureDefinitionElement(object):
             elif len(tps) > 0:
                 type_code = tps[0].code
             elif self.profile.structure.kind:
-                type_code = self.profile.spec.settings.default_base.get(
+                type_code = self.profile.spec.generator_config.default_base[
                     self.profile.structure.kind
-                )
+                ]
             self._superclass_name = self.profile.spec.class_name_for_type(type_code)
 
         return self._superclass_name
@@ -1077,7 +1083,7 @@ class FHIRStructureDefinitionElementDefinition(object):
         )
         if (
             parent_name is not None
-            and self.element.profile.spec.settings.backbone_class_adds_parent
+            and self.element.profile.spec.generator_config.naming_rules.backbone_class_adds_parent
         ):
             classname = parent_name + classname
         return classname

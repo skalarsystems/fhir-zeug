@@ -9,7 +9,8 @@ from fhirzeug.fhirspec import (
 
 def test_writable_profiles(spec: FHIRSpec):
     check = any(
-        item in spec.settings.manual_profiles for item in spec.writable_profiles()
+        item in spec.generator_config.manual_profiles
+        for item in spec.writable_profiles()
     )
     assert check is False
 
@@ -24,7 +25,7 @@ def test_as_module_name(spec: FHIRSpec):
     module_name = spec.as_module_name("VerificationResult")
     assert module_name == "verificationresult"
 
-    spec.settings.resource_modules_lowercase = False
+    spec.generator_config.naming_rules.resource_modules_lowercase = False
 
     module_name = spec.as_module_name("VerificationResult")
     assert module_name == "VerificationResult"
@@ -34,11 +35,11 @@ def test_as_class_name(spec: FHIRSpec):
     class_name = spec.as_class_name("role", "Practitioner")
     assert class_name == "PractRole"
 
-    spec.settings.camelcase_classes = True
+    spec.generator_config.naming_rules.camelcase_classes = True
     class_name = spec.as_class_name("nonexistent")
     assert class_name == "Nonexistent"
 
-    spec.settings.camelcase_classes = False
+    spec.generator_config.naming_rules.camelcase_classes = False
     class_name = spec.as_class_name("nonexistent")
     assert class_name == "nonexistent"
 
