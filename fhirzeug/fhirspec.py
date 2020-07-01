@@ -7,6 +7,7 @@ import re
 import json
 import datetime
 from pathlib import Path
+import stringcase  # type: ignore
 from typing import Dict, List, Optional, Union
 
 from .logger import logger
@@ -210,7 +211,7 @@ class FHIRSpec(object):
 
         # CamelCase or just plain
         if self.settings.camelcase_classes:
-            return classname[:1].upper() + classname[1:]
+            return stringcase.pascalcase(classname)  # upper camelcase
         return classname
 
     def class_name_for_type(
@@ -249,18 +250,21 @@ class FHIRSpec(object):
         return self.settings.reservedmap.get(prop_name, prop_name)
 
     def safe_enum_name(self, enum_name: str, ucfirst: bool = False) -> str:
-        """ """
-
         assert enum_name, "Must have a name"
 
         name = self.settings.enum_map.get(enum_name, enum_name)
-        parts = re.split(r"\W+", name)
+        parts = re.split(r"[\W_]+", name)
 
+        # /!\ "CamelCase" term here is misleading.
+        # "CamelCase" is not opposed to "snake_case", at least here.
+        # See tests to see real cases.
         if self.settings.camelcase_enums:
             name = "".join([n[:1].upper() + n[1:] for n in parts])
             if not ucfirst and name.upper() != name:
                 name = name[:1].lower() + name[1:]
         else:
+            # /!\ This is not a real snakecase.
+            # Is it a problem ? Ex: HTTPVerb remains HTTPVerb
             name = "_".join(parts)
 
         if re.match(r"^\d", name):

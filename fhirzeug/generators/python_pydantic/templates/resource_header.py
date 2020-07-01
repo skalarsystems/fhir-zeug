@@ -1,5 +1,6 @@
 import enum
 import decimal
+import stringcase
 import typing
 from collections.abc import Mapping
 
@@ -25,18 +26,16 @@ def choice_of_validator(choices, optional):
 def camelcase_alias_generator(name: str) -> str:
     """Maps snakecase to camelcase.
 
-    This enables members to be created from camelCase. It takes the existing camelcase membername
-    like foo_bar and converts it to its camelcase pedant fooBar.
+    This enables members to be created from camelCase. It takes the existing snakecase membername
+    like foo_bar and converts it to its camelcase pendant fooBar.
 
     Additionally it removes trailing _, since this is used to make membernames of reserved keywords
     usable, like `class`.
     """
 
     if name.endswith("_"):
-        return name[:-1]
-
-    components = name.split("_")
-    return components[0] + "".join(word.capitalize() for word in components[1:])
+        name = name[:-1]
+    return stringcase.camelcase(name)
 
 
 class DocEnum(enum.Enum):
@@ -58,7 +57,7 @@ class DocEnum(enum.Enum):
 
 def decimal_to_json(value: decimal.Decimal) -> typing.Union[float, int]:
     """Convert a decimal to float or int, depending on if it has a decimal part.
-    
+
     It is for JSON serialization - to serialize it in the same form as was
     originally provided.
     """
