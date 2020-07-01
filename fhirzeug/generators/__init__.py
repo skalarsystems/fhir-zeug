@@ -1,7 +1,7 @@
 import yaml
 from pathlib import Path
 from typing import Optional
-from fhirzeug.generators.yaml_model import GeneratorConfig
+from .yaml_model import GeneratorConfig
 
 GENERATOR_FILENAME = "generator.yaml"
 
