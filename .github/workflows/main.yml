@@ -70,11 +70,9 @@ jobs:
 
       - name: Code Generation Python
         run: |
-          poetry run fhirzeug  --output-directory pydantic-fhir --generator python_pydantic
-          cd pydantic-fhir
+          poetry run fhirzeug  --output-directory /tmp/pydantic-fhir --generator python_pydantic
+          cd /tmp/pydantic-fhir
           poetry install
           # Check for duplicated classes
           poetry run flake8 --select=F811 pydantic_fhir/r4.py
-          # execute all tests except to ones we excpect to fail
-          # I got the via `./pydantic_gen_and_test.sh | grep FAILED`
           poetry run pytest tests
