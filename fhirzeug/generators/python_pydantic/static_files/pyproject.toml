@@ -21,6 +21,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
+stringcase = "^1.2.0"
 pydantic = "^1.5.1"
 
 [tool.poetry.dev-dependencies]

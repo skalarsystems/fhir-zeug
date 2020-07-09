@@ -61,14 +61,14 @@ jobs:
       - name: Test with pytest
         run: poetry run pytest --cov=fhirzeug tests -n 2 --cov-report xml
 
-      # - name: Code Generation Python
-      #   run: |
-      #     poetry run fhirzeug  --output-directory /tmp/pydantic-fhir --generator python_pydantic
-      #     cd /tmp/pydantic-fhir
-      #     poetry install
-      #     # Check for duplicated classes
-      #     poetry run flake8 --select=F811 pydantic_fhir/r4.py
-      #     poetry run pytest tests
+      - name: Code Generation Python
+        run: |
+          poetry run fhirzeug  --output-directory /tmp/pydantic-fhir --generator python_pydantic
+          cd /tmp/pydantic-fhir
+          poetry install
+          # Check for duplicated classes
+          poetry run flake8 --select=F811 pydantic_fhir/r4.py
+          poetry run pytest tests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
