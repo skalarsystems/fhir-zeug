@@ -33,15 +33,15 @@ jobs:
         uses: actions/cache@v1
         id: cache
         with:
-          path: ~/.virtualenvs
+          path: .venv
           key: poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             poetry-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Set Poetry config
-        run: |
-          poetry config --local virtualenvs.in-project false
-          poetry config --local virtualenvs.path ~/.virtualenvs
+      # - name: Set Poetry config
+      #   run: |
+      #     poetry config --local virtualenvs.in-project false
+      #     poetry config --local virtualenvs.path ~/.virtualenvs
 
       - name: Install Dependencies
         run: poetry install
