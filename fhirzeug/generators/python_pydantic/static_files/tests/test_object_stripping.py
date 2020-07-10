@@ -17,4 +17,3 @@ def test_skipped_resource(subject_reference):
                 "subject": subject_reference,
             }
         )
-
