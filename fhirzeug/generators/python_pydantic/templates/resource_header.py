@@ -74,6 +74,11 @@ class FHIRAbstractBase(pydantic.BaseModel):
         serialized = super().dict(*args, **kwargs)
         return _without_empty_items(serialized)
 
+    @pydantic.root_validator(pre=True)
+    def strip_empty_items(cls, valuse):
+        """This strips all empty elements according to the fhir spec."""
+        return _without_empty_items(valuse)
+
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
@@ -102,6 +107,7 @@ def _without_empty_items(obj: typing.Any):
         return None
 
     if isinstance(obj, str):
+        obj = obj.strip()
         if not obj:
             return None
         return obj
