@@ -10,7 +10,7 @@ from pydantic_fhir.r4 import from_dict, ClinicalImpression
 def test_skipped_resource(subject_reference):
 
     with pytest.raises(ValidationError):
-        bbb: ClinicalImpression = from_dict(
+        from_dict(
             {
                 "resourceType": "ClinicalImpression",
                 "status": "completed",
