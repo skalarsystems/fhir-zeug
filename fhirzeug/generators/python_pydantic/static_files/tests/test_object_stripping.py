@@ -1,7 +1,7 @@
 import pytest
 
 from pydantic import ValidationError
-from pydantic_fhir.r4 import from_dict, ClinicalImpression
+from pydantic_fhir.r4 import from_dict
 
 
 @pytest.mark.parametrize(
