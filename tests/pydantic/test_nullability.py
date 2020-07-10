@@ -68,26 +68,22 @@ def test_empty_lists_are_ignored():
     assert RootModel(field_a="a", list_items=[]).dict() == {
         "field_a": "a",
     }
-    assert RootModel(
-        field_a="a", list_items=[ListItem(), ListItem(), ListItem()]
-    ).dict() == {"field_a": "a"}
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(**{"field_a": "a", "list_items": [{}, {}, {}]})
 
 
 def test_non_empty_list_items_are_serialized():
-    assert RootModel(
-        field_a="a",
-        list_items=[
-            ListItem(list_field_a="list item 1 a"),
-            ListItem(),
-            ListItem(list_field_a="list item 3 a"),
-        ],
-    ).dict() == {
-        "field_a": "a",
-        "list_items": [
-            {"list_field_a": "list item 1 a"},
-            {"list_field_a": "list item 3 a"},
-        ],
-    }
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(
+            **{
+                "field_a": "a",
+                "list_items": [
+                    {"list_field_a": "list item 1 a"},
+                    {},
+                    {"list_field_a": "list item 3 a"},
+                ],
+            }
+        )
 
 
 def test_none_items_cannot_be_in_lists():
@@ -100,6 +96,17 @@ def test_none_items_cannot_be_in_lists():
                 ListItem(list_field_a="list item 3 a"),
             ],
         )
+
+
+def test_none_items_in_lists():
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(
+            field_a="a", list_items=[None],
+        )
+
+
+def test_none_as_list():
+    assert RootModel(field_a="a", list_items=None,).dict() == {"field_a": "a"}
 
 
 def test_empty_strings_are_ignored():

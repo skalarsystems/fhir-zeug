@@ -74,12 +74,17 @@ class FHIRAbstractBase(pydantic.BaseModel):
         serialized = super().dict(*args, **kwargs)
         return _without_empty_items(serialized)
 
+    @pydantic.root_validator(pre=True)
+    def strip_empty_items(cls, valuse):
+        """This strips all empty elements according to the fhir spec."""
+        return _without_empty_items(valuse) or {}
+
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
         json_encoders = {
             # Pydantic by default converts decimals to floats in JSON output
-            # (adding `.0` for ints). We przefer to leave them in the original
+            # (adding `.0` for integer). We prefer to leave them in the original
             # form.
             decimal.Decimal: decimal_to_json
         }
@@ -102,17 +107,13 @@ def _without_empty_items(obj: typing.Any):
         return None
 
     if isinstance(obj, str):
+        obj = obj.strip()
         if not obj:
             return None
         return obj
 
     if isinstance(obj, (list, tuple)):
-        cleaned_list = []
-        for item in obj:
-            cleaned_item = _without_empty_items(item)
-            if cleaned_item:
-                cleaned_list.append(cleaned_item)
-
+        cleaned_list = [_without_empty_items(item) for item in obj]
         if cleaned_list:
             return cleaned_list
         return None
