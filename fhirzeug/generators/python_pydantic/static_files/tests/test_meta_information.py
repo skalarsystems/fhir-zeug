@@ -9,6 +9,6 @@ def test_meta_information():
         node = nodes.pop()
         nodes += node.__subclasses__()
         if node in empty_profiles:
-            assert len(node.META.profile) == 0
+            assert len(node.Meta.profile) == 0
         else:
-            assert len(node.META.profile) > 0
+            assert len(node.Meta.profile) > 0
