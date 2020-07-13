@@ -12,7 +12,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     resource_type = "{{ clazz.resource_type }}"
 {%- endif %}
 
-    class META:
+    class Meta:
         profile: typing.List[str] =[
         {% for url in clazz.urls %}   "{{url}}",
         {% endfor%}]

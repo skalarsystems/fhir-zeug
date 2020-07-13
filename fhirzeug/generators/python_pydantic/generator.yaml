@@ -1,5 +1,3 @@
-# copy examples to tests/examples/directory
-copy_examples:
-  destination: tests/test_examples/examples
-
-output_file: "pydantic_fhir/r4.py"
+# Generator name and module location
+name: python_pydantic
+module: fhirzeug.generators.python_pydantic

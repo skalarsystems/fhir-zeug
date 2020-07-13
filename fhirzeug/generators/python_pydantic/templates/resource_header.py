@@ -70,7 +70,7 @@ class FHIRAbstractBase(pydantic.BaseModel):
     """Abstract base class for all FHIR elements.
     """
 
-    class META:
+    class Meta:
         profile: typing.List[str] = []
         """ Profiles this resource claims to conform to.
         List of `str` items. """

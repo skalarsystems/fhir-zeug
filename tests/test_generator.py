@@ -2,12 +2,10 @@ from pathlib import Path
 
 from fhirzeug.generator import generate
 from fhirzeug.fhirspec import FHIRSpec
-from fhirzeug.generators.yaml_model import GeneratorConfig
 
 
 def test_write(spec: FHIRSpec, tmp_path: Path):
-
-    generator_config = GeneratorConfig(output_file=Path("output.py"))
-    generate(spec, tmp_path, generator_config)
-
+    spec.generator_config.output_directory.destination = tmp_path
+    spec.generator_config.output_file.destination = Path("output.py")
+    generate(spec)
     assert tmp_path.joinpath("output.py").is_file()

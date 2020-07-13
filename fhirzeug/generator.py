@@ -1,54 +1,52 @@
-from pathlib import Path
 import shutil
 
 from .fhirspec import FHIRSpec
 from . import fhirrenderer
-from .generators.yaml_model import GeneratorConfig
+from .generators import get_generator_path
 
 
-def generate(spec: FHIRSpec, output_directory: Path, generator_config: GeneratorConfig):
+def generate(spec: FHIRSpec):
     """Generates code based on the spec and the generator.
 
     Args:
         spec: A parsed specification.
-        output_directory: The directory where the output goes to.
     """
+    generator_config = spec.generator_config
+    output_directory = generator_config.output_directory.destination
     output_directory.mkdir(exist_ok=True)
-    generator_path = Path(spec.settings.__file__).parent
+    generator_path = get_generator_path(generator_config)
 
-    # copy examples if configured
-    if generator_config.copy_examples is not None:
-        dest_directory = output_directory.joinpath(
-            generator_config.copy_examples.destination
-        )
-        dest_directory.mkdir(parents=True, exist_ok=True)
-        for source_path in spec.directory.glob("*-example.json"):
-            dest_path = dest_directory.joinpath(source_path.name)
-            shutil.copy2(source_path, dest_path)
+    # Copy examples
+    dest_directory = output_directory.joinpath(
+        generator_config.copy_examples.destination
+    )
+    dest_directory.mkdir(parents=True, exist_ok=True)
+    for source_path in spec.directory.glob("*-example.json"):
+        dest_path = dest_directory.joinpath(source_path.name)
+        shutil.copy2(source_path, dest_path)
 
-    # copy static files
+    # Copy static files
     shutil.copytree(
         generator_path.joinpath("static_files"), output_directory, dirs_exist_ok=True,
     )
 
-    # configureable templates
-    if spec.settings.write_resources:
-        with output_directory.joinpath(generator_config.output_file).open("w") as f_out:
-            with generator_path.joinpath("templates/resource_header.py").open(
-                "r"
-            ) as f_in:
+    # Generate main file
+    if generator_config.template.generate_code:
+        dest_filepath = output_directory / generator_config.output_file.destination
+        with dest_filepath.open("w") as f_out:
+            header_filepath = generator_path / "templates/resource_header.py"
+            footer_filepath = generator_path / "templates/resource_footer.py"
+
+            # Copy Header
+            with header_filepath.open("r") as f_in:
                 shutil.copyfileobj(f_in, f_out)
-            value_set_renderer = fhirrenderer.FHIRValueSetRenderer(
-                spec, spec.settings, spec.generator_module
-            )
-            value_set_renderer.render(f_out)
 
-            renderer = fhirrenderer.FHIRStructureDefinitionRenderer(
-                spec, spec.settings, spec.generator_module
-            )
-            renderer.render(f_out)
+            # Render Enums
+            fhirrenderer.FHIRValueSetRenderer(spec).render(f_out)
 
-            with generator_path.joinpath("templates/resource_footer.py").open(
-                "r"
-            ) as f_in:
+            # Render Resources
+            fhirrenderer.FHIRStructureDefinitionRenderer(spec).render(f_out)
+
+            # Copy Footer
+            with footer_filepath.open("r") as f_in:
                 shutil.copyfileobj(f_in, f_out)
