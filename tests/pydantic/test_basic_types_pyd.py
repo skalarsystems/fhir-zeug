@@ -1,13 +1,15 @@
-import typing
-import decimal
 import base64
+import decimal
+import typing
 
 
-import pytest
 import pydantic
+import pytest
 
 
 from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import (
+    FHIRString,
+    FHIRRequiredString,
     FHIRDate,
     FHIRDateTime,
     FHIRTime,
@@ -21,6 +23,7 @@ from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import (
 class ExampleModel(pydantic.BaseModel):
     """A Test class to check all basic datatypes."""
 
+    string: typing.Optional[FHIRString]
     date: typing.Optional[FHIRDate]
     datetime: typing.Optional[FHIRDateTime]
     time: typing.Optional[FHIRTime]
@@ -29,6 +32,43 @@ class ExampleModel(pydantic.BaseModel):
     oid: typing.Optional[FHIROid]
     fhir_id: typing.Optional[FHIRId]
     decimal: typing.Optional[decimal.Decimal]
+
+
+def test_fhirstring():
+    """Test FHIRString
+    https://www.hl7.org/fhir/datatypes.html#string"""
+    model = ExampleModel(string="wow")
+    assert model.string == "wow"
+    model = ExampleModel(string="    foo")
+    assert model.string == "foo"
+    model = ExampleModel(string="bar    ")
+    assert model.string == "bar"
+    model = ExampleModel(string="   baz \n ")
+    assert model.string == "baz"
+    model = ExampleModel(string="  ")
+    assert model.string == ""
+
+
+def test_fhirrequiredstring():
+    """Test FHIRRequiredString
+
+    It's a variant of FHIRString which requires at least one non-whitespace
+    character.
+    """
+
+    class ExampleModelWithRequiredString(pydantic.BaseModel):
+        required_string = FHIRRequiredString()
+
+    with pytest.raises(pydantic.ValidationError):
+        ExampleModelWithRequiredString(required_string=None)
+    with pytest.raises(pydantic.ValidationError):
+        ExampleModelWithRequiredString(required_string="")
+    with pytest.raises(pydantic.ValidationError):
+        ExampleModelWithRequiredString(required_string=" \n\t\r  ")
+    model = ExampleModel(string="wow")
+    assert model.string == "wow"
+    model = ExampleModel(string="    foo")
+    assert model.string == "foo"
 
 
 def test_fhirdate():

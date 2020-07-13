@@ -1,0 +1,16 @@
+{
+    "version": "0.1",
+    "words": [
+        "clazz",
+        "dstu",
+        "fhir",
+        "fhirabstractbase",
+        "fhirabstractresource",
+        "fhirloader",
+        "fhirspec",
+        "fhirzeug",
+        "pydantic",
+        "typer",
+        "zeug"
+    ]
+}

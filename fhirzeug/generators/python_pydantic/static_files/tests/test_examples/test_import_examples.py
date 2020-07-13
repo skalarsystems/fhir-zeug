@@ -1,5 +1,7 @@
 import json
+import typing
 from pathlib import Path
+
 import pytest
 
 from pydantic_fhir import r4
@@ -14,6 +16,29 @@ NOT_WORKING = {
     "patient-example.json",  # _name
     "activitydefinition-predecessor-example.json",  # _event
 }
+
+# Some .json files require preprocessing because they have whitespace at the end
+# of strings, which is removed by pydantic-fhir.
+REQUIRES_WHITESPACE_PREPROCESSING = {
+    "measure-cms146-example.json",
+    "medicinalproductpackaged-example.json",
+    "plandefinition-protocol-example.json",
+}
+
+
+def preprocess_whitespace(obj: typing.Any) -> typing.Any:
+    """Remove the leading and trailing whitespace from strings in the object."""
+    if isinstance(obj, str):
+        return obj.strip()
+
+    # we should worry only about JSON types here
+    if isinstance(obj, list):
+        return [preprocess_whitespace(item) for item in obj]
+
+    if isinstance(obj, dict):
+        return {key: preprocess_whitespace(value) for key, value in obj.items()}
+
+    return obj
 
 
 def test_read(fhir_file: Path):
@@ -33,6 +58,10 @@ def test_read_write(fhir_file: Path):
     # load
     with fhir_file.open() as f_in:
         doc = json.load(f_in)
+
+    if fhir_file.name in REQUIRES_WHITESPACE_PREPROCESSING:
+        doc = preprocess_whitespace(doc)
+
     obj = r4.from_dict(doc)
 
     # write

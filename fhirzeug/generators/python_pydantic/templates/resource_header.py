@@ -1,5 +1,6 @@
 import enum
 import decimal
+import stringcase
 import typing
 from collections.abc import Mapping
 
@@ -25,18 +26,16 @@ def choice_of_validator(choices, optional):
 def camelcase_alias_generator(name: str) -> str:
     """Maps snakecase to camelcase.
 
-    This enables members to be created from camelCase. It takes the existing camelcase membername
-    like foo_bar and converts it to its camelcase pedant fooBar.
+    This enables members to be created from camelCase. It takes the existing snakecase membername
+    like foo_bar and converts it to its camelcase pendant fooBar.
 
     Additionally it removes trailing _, since this is used to make membernames of reserved keywords
     usable, like `class`.
     """
 
     if name.endswith("_"):
-        return name[:-1]
-
-    components = name.split("_")
-    return components[0] + "".join(word.capitalize() for word in components[1:])
+        name = name[:-1]
+    return stringcase.camelcase(name)
 
 
 class DocEnum(enum.Enum):
@@ -56,6 +55,17 @@ class DocEnum(enum.Enum):
         return obj
 
 
+def decimal_to_json(value: decimal.Decimal) -> typing.Union[float, int]:
+    """Convert a decimal to float or int, depending on if it has a decimal part.
+
+    It is for JSON serialization - to serialize it in the same form as was
+    originally provided.
+    """
+    if value.as_tuple().exponent == 0:
+        return int(value)
+    return float(value)
+
+
 class FHIRAbstractBase(pydantic.BaseModel):
     """Abstract base class for all FHIR elements.
     """
@@ -69,9 +79,20 @@ class FHIRAbstractBase(pydantic.BaseModel):
         serialized = super().dict(*args, **kwargs)
         return _without_empty_items(serialized)
 
+    @pydantic.root_validator(pre=True)
+    def strip_empty_items(cls, valuse):
+        """This strips all empty elements according to the fhir spec."""
+        return _without_empty_items(valuse) or {}
+
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
+        json_encoders = {
+            # Pydantic by default converts decimals to floats in JSON output
+            # (adding `.0` for integer). We prefer to leave them in the original
+            # form.
+            decimal.Decimal: decimal_to_json
+        }
 
 
 def _without_empty_items(obj: typing.Any):
@@ -91,17 +112,13 @@ def _without_empty_items(obj: typing.Any):
         return None
 
     if isinstance(obj, str):
+        obj = obj.strip()
         if not obj:
             return None
         return obj
 
     if isinstance(obj, (list, tuple)):
-        cleaned_list = []
-        for item in obj:
-            cleaned_item = _without_empty_items(item)
-            if cleaned_item:
-                cleaned_list.append(cleaned_item)
-
+        cleaned_list = [_without_empty_items(item) for item in obj]
         if cleaned_list:
             return cleaned_list
         return None

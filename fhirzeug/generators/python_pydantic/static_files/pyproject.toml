@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydantic-fhir"
-version = "0.0.1-alpha3"
+version = "0.0.1-alpha10"
 description = "Generated FHIR model for Pydantic."
 readme = "README.md"
 authors = ["Skalar Systems <contact@skalarsystems.com>"]
@@ -21,6 +21,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
+stringcase = "^1.2.0"
 pydantic = "^1.5.1"
 
 [tool.poetry.dev-dependencies]

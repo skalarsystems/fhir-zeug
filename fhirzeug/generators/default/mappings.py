@@ -17,16 +17,16 @@ classmap: typing.Dict[str, str] = {
     "instant": "FHIRInstant",
     "time": "FHIRTime",
     "decimal": "decimal.Decimal",
-    "string": "str",
-    "markdown": "str",
+    "string": "FHIRString",
+    "markdown": "FHIRString",
     "id": "FHIRId",
     "code": "FHIRCode",  # for now we're not generating enums for these
-    "uri": "str",
-    "url": "str",
-    "canonical": "str",
+    "uri": "FHIRString",
+    "url": "FHIRString",
+    "canonical": "FHIRString",
     "oid": "FHIROid",
-    "uuid": "str",
-    "xhtml": "str",
+    "uuid": "FHIRString",
+    "xhtml": "FHIRString",
     "base64Binary": "FHIRBase64Binary",
 }
 
@@ -36,7 +36,7 @@ replacemap: typing.Dict[str, str] = {
 }
 
 # Which class names are native to the language (or can be treated this way)
-natives = ["bool", "int", "float", "str", "dict", "decimal"]
+natives = ["bool", "int", "float", "str", "dict", "decimal.Decimal", "FHIRString"]
 
 # Which classes are to be expected from JSON decoding
 jsonmap: typing.Dict[str, str] = {
@@ -78,7 +78,19 @@ enum_map: typing.Dict[str, str] = {
 
 # If you want to give specific names to enums based on their URI
 enum_namemap: typing.Dict[str, str] = {
-    # 'http://hl7.org/fhir/coverage-exception': 'CoverageExceptionCodes',
+    "http://terminology.hl7.org/CodeSystem/composition-altcode-kind": "CompositionAltcodeKind",
+    "http://terminology.hl7.org/CodeSystem/codesystem-altcode-kind": "CodesystemAltcodeKind",
+    "http://hl7.org/fhir/contract-security-category": "ContractSecurityCategoryCodes",
+    "http://hl7.org/fhir/contract-security-classification": "ContractSecurityClassificationCodes",
+    "http://hl7.org/fhir/contract-scope": "ContractScopeCodes",
+    "http://hl7.org/fhir/device-definition-status": "FHIRDeviceDefinitionStatus",
+    "http://hl7.org/fhir/device-status": "FHIRDeviceStatus",
+    "http://hl7.org/fhir/CodeSystem/medication-statement-status": "MedicationStatementStatusCodes",
+    "http://hl7.org/fhir/CodeSystem/medication-status": "MedicationStatusCodes",
+    "http://terminology.hl7.org/CodeSystem/observation-category": "ObservationCategoryCodes",
+    "http://hl7.org/fhir/secondary-finding": "SecondaryFindingCodes",
+    # PractinionerRole is also a DomainResource
+    "http://terminology.hl7.org/CodeSystem/practitioner-role": "PractitionerRoleCodes",
 }
 
 # If certain CodeSystems don't need to generate an enum

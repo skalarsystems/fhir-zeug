@@ -1,5 +1,9 @@
 import typing
 
+import pydantic
+import pytest
+
+from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import FHIRString
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
 )
@@ -11,19 +15,19 @@ from fhirzeug.generators.python_pydantic.templates.resource_header import (
 
 
 class ChildModel(FHIRAbstractBase):
-    child_field_a: typing.Optional[str]
+    child_field_a: typing.Optional[FHIRString]
     child_field_b: typing.Optional[int]
     child_field_c: typing.Optional[bool]
 
 
 class ListItem(FHIRAbstractBase):
-    list_field_a: typing.Optional[str]
+    list_field_a: typing.Optional[FHIRString]
     list_field_b: typing.Optional[int]
     list_field_c: typing.Optional[bool]
 
 
 class RootModel(FHIRAbstractBase):
-    field_a: typing.Optional[str]
+    field_a: typing.Optional[FHIRString]
     field_b: typing.Optional[int]
     field_c: typing.Optional[bool]
 
@@ -64,26 +68,45 @@ def test_empty_lists_are_ignored():
     assert RootModel(field_a="a", list_items=[]).dict() == {
         "field_a": "a",
     }
-    assert RootModel(
-        field_a="a", list_items=[ListItem(), ListItem(), ListItem()]
-    ).dict() == {"field_a": "a"}
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(**{"field_a": "a", "list_items": [{}, {}, {}]})
 
 
 def test_non_empty_list_items_are_serialized():
-    assert RootModel(
-        field_a="a",
-        list_items=[
-            ListItem(list_field_a="list item 1 a"),
-            ListItem(),
-            ListItem(list_field_a="list item 3 a"),
-        ],
-    ).dict() == {
-        "field_a": "a",
-        "list_items": [
-            {"list_field_a": "list item 1 a"},
-            {"list_field_a": "list item 3 a"},
-        ],
-    }
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(
+            **{
+                "field_a": "a",
+                "list_items": [
+                    {"list_field_a": "list item 1 a"},
+                    {},
+                    {"list_field_a": "list item 3 a"},
+                ],
+            }
+        )
+
+
+def test_none_items_cannot_be_in_lists():
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(
+            field_a="a",
+            list_items=[
+                ListItem(list_field_a="list item 1 a"),
+                None,
+                ListItem(list_field_a="list item 3 a"),
+            ],
+        )
+
+
+def test_none_items_in_lists():
+    with pytest.raises(pydantic.ValidationError):
+        RootModel(
+            field_a="a", list_items=[None],
+        )
+
+
+def test_none_as_list():
+    assert RootModel(field_a="a", list_items=None,).dict() == {"field_a": "a"}
 
 
 def test_empty_strings_are_ignored():

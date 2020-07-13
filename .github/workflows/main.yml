@@ -33,13 +33,14 @@ jobs:
         uses: actions/cache@v1
         id: cache
         with:
-          path: ~/.virtualenvs
+          path: .venv
           key: poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             poetry-${{ hashFiles('**/poetry.lock') }}
 
       - name: Set Poetry config
         run: |
+          poetry config virtualenvs.create true
           poetry config virtualenvs.in-project false
           poetry config virtualenvs.path ~/.virtualenvs
 
@@ -60,6 +61,15 @@ jobs:
       - name: Test with pytest
         run: poetry run pytest --cov=fhirzeug tests -n 2 --cov-report xml
 
+      - name: Code Generation Python
+        run: |
+          poetry run fhirzeug  --output-directory /tmp/pydantic-fhir --generator python_pydantic
+          cd /tmp/pydantic-fhir
+          poetry install
+          # Check for duplicated classes
+          poetry run flake8 --select=F811 pydantic_fhir/r4.py
+          poetry run pytest tests
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -67,12 +77,3 @@ jobs:
           flags: unittests
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-
-      - name: Code Generation Python
-        run: |
-          poetry run fhirzeug  --output-directory pydantic-fhir --generator python_pydantic
-          cd pydantic-fhir
-          poetry install
-          # execute all tests except to ones we excpect to fail
-          # I got the via `./pydantic_gen_and_test.sh | grep FAILED`
-          poetry run pytest tests

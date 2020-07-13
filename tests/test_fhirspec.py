@@ -54,3 +54,41 @@ def test_class_name_for_profile(spec: FHIRSpec):
     assert spec.class_name_for_profile(None) is None
     assert spec.class_name_for_profile(profile_name) == class_name
     assert spec.class_name_for_profile([profile_name]) == [class_name]
+
+
+def test_safe_enum_name(spec: FHIRSpec):
+    spec.settings.camelcase_enums = True
+    assert spec.safe_enum_name("foo_bar", ucfirst=True) == "FooBar"
+    assert spec.safe_enum_name("foo_bar", ucfirst=False) == "fooBar"
+    assert spec.safe_enum_name("HTTP", ucfirst=True) == "HTTP"
+    assert spec.safe_enum_name("HTTP", ucfirst=False) == "HTTP"
+
+    # Real case examples
+    assert spec.safe_enum_name("entered-in-error") == "enteredInError"
+    assert (
+        spec.safe_enum_name("ExampleOnsetType(Reason)Codes")
+        == "exampleOnsetTypeReasonCodes"
+    )
+    assert spec.safe_enum_name("openAtEnd") == "openAtEnd"
+    assert spec.safe_enum_name("1-password") == "_1Password"
+    assert (
+        spec.safe_enum_name("HTTPVerb") == "hTTPVerb"  # <- is this a desired behavior
+    )
+
+    spec.settings.camelcase_enums = False
+    assert spec.safe_enum_name("foo_bar", ucfirst=True) == "foo_bar"
+    assert spec.safe_enum_name("foo_bar", ucfirst=False) == "foo_bar"
+    assert spec.safe_enum_name("HTTP", ucfirst=True) == "HTTP"
+    assert spec.safe_enum_name("HTTP", ucfirst=False) == "HTTP"
+
+    # Real case examples
+    assert spec.safe_enum_name("entered-in-error") == "entered_in_error"
+    assert (
+        spec.safe_enum_name("ExampleOnsetType(Reason)Codes")
+        == "ExampleOnsetType_Reason_Codes"
+    )
+    assert spec.safe_enum_name("openAtEnd") == "openAtEnd"
+    assert spec.safe_enum_name("1-password") == "_1_password"
+    assert (
+        spec.safe_enum_name("HTTPVerb") == "HTTPVerb"  # <- is this a desired behavior
+    )
