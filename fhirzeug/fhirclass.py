@@ -1,5 +1,5 @@
 from .logger import logger
-from typing import List, Dict, Optional, TYPE_CHECKING
+from typing import List, Dict, Optional, Set, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .fhirspec import FHIRStructureDefinitionElement, FHIRElementType
@@ -19,6 +19,7 @@ class FHIRClass:
         assert element.represents_class
         class_name = element.name_if_class
         if class_name in cls.known:
+            cls.known[class_name].add_url(element.profile.url)
             return cls.known[class_name], False
 
         klass = cls(element, class_name)
@@ -41,6 +42,8 @@ class FHIRClass:
         self.formal: str = element.definition.formal
         self.properties: List["FHIRClassProperty"] = []
         self.expanded_nonoptionals: Dict[str, List["FHIRClassProperty"]] = {}
+        self.__urls: Set[str] = set()
+        self.add_url(element.profile.url)
 
     def add_property(self, prop: "FHIRClassProperty") -> None:
         """ Add a property to the receiver.
@@ -79,6 +82,14 @@ class FHIRClass:
                 )
             else:
                 self.expanded_nonoptionals[prop.name] = [prop]
+
+    def add_url(self, url: Optional[str]) -> None:
+        if url is not None:
+            self.__urls.add(url)
+
+    @property
+    def urls(self) -> List[str]:
+        return list(self.__urls)
 
     @property
     def nonexpanded_properties(self) -> List["FHIRClassProperty"]:
