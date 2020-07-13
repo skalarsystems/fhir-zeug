@@ -115,7 +115,8 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             current = work_stack.pop()
             for elm in derive_graph.get(current, []):
                 work_stack.append(elm.name)
-                classes.append(elm)
+                if elm not in classes:
+                    classes.append(elm)
 
         for clazz in classes:
             data = {
