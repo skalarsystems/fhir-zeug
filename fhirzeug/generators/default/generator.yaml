@@ -9,8 +9,7 @@ output_file:
   destination: "pydantic_fhir/r4.py"
 
 copy_examples:
-  # copy examples to tests/examples/directory
-  destination: tests/examples
+  destination: tests/test_examples/examples
 
 # Base URL for where to load specification data from
 specification_url: http://hl7.org/fhir/R4

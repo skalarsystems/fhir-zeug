@@ -1,6 +1,8 @@
 
 # this inherits from string as well so we can serialize it correctly with pydantic
 class {{system.name}}(str, DocEnum):
+    """ Defining URL : {{system.url}}
+    """
     {% for code in system.codes %}
     {{code.name}} = "{{code.code}}", """{{code.definition}} """
     {% endfor %}
