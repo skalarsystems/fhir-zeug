@@ -39,13 +39,6 @@ def camelcase_alias_generator(name: str) -> str:
     return components[0] + "".join(word.capitalize() for word in components[1:])
 
 
-class FHIRMeta(typing.NamedTuple):
-
-    profile: typing.List[str] = []
-    """ Profiles this resource claims to conform to.
-    List of `str` items. """
-
-
 class DocEnum(enum.Enum):
     """Enum with docstrings support"""
 
@@ -67,7 +60,10 @@ class FHIRAbstractBase(pydantic.BaseModel):
     """Abstract base class for all FHIR elements.
     """
 
-    _META: "FHIRMeta" = FHIRMeta()
+    class META:
+        profile: typing.List[str] = []
+        """ Profiles this resource claims to conform to.
+        List of `str` items. """
 
     def dict(self, *args, **kwargs):
         serialized = super().dict(*args, **kwargs)

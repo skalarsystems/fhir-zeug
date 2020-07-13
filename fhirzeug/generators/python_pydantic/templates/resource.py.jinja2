@@ -12,11 +12,13 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     resource_type = "{{ clazz.resource_type }}"
 {%- endif %}
 
-    _META: "FHIRMeta" = FHIRMeta(
-        profile=[
+    class META:
+        profile: typing.List[str] =[
         {% for url in clazz.urls %}   "{{url}}",
-        {% endfor%}],
-    )
+        {% endfor%}]
+        """ Profiles this resource claims to conform to.
+        List of `str` items. """
+
 
 {% set enums = [] %}
 {% for prop in clazz.properties %}
