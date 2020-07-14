@@ -1,6 +1,3 @@
-import typing
-
-
 from pydantic_fhir import r4
 
 
