@@ -91,13 +91,9 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
                     shutil.copyfile(origpath, tgt)
 
     def render(self, f_out):
-        classes = self.get_classes_to_render()
-        resource_types = sorted(
-            [clazz.resource_type for clazz in classes if clazz.resource_type]
-        )
-
         self.copy_files(None, f_out)
 
+        classes = self.get_classes_to_render()
         for clazz in classes:
             data = {"clazz": clazz}
             source_path = self.generator_config.template.resource_source
