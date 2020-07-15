@@ -28,6 +28,8 @@ template:
   codesystems_source: codesystems.py.jinja2
   # the template to use as source when writing resource implementations for profiles
   resource_source: resource.py.jinja2
+  # the template to use as source when writing the resource_type type hint
+  fhir_resource_type_source: resource_type.py.jinja2
 
 # Configuration for classes and resources
 default_base:

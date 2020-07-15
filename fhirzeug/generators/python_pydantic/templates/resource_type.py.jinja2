@@ -1,0 +1,8 @@
+
+
+FHIRResourceType = typing.Literal[
+  "FHIRAbstractResource",{% for resource_type in resource_types %}
+  "{{resource_type}}",{% endfor %}
+]
+
+

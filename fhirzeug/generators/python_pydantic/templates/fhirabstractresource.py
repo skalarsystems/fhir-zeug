@@ -1,5 +1,3 @@
-
-
 class FHIRAbstractResource(FHIRAbstractBase):
 
-    resource_type = "FHIRAbstractResource"
+    resource_type: FHIRResourceType = "FHIRAbstractResource"

@@ -19,12 +19,14 @@ class Template(BaseModel):
 
     Attributes:
         codesystems_source: Source template to generate enums
+        fhir_resource_type_source: type hint for resource_type attribute
         generate_code: Whether code generation must be executed
         resource_source: Source template to generate resources
         source: In which directory to find templates
     """
 
     codesystems_source: str
+    fhir_resource_type_source: str
     generate_code: bool
     resource_source: str
     source: str
