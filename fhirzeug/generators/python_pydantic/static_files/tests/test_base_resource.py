@@ -10,7 +10,22 @@ def test_resource_type_not_allowed():
     In practice, this value must never be set manually.
     """
     resource = r4.FHIRAbstractResource()
-    resource = r4.FHIRAbstractResource(resource_type="DomainResource")
+    assert resource.resource_type == "FHIRAbstractResource"
+
+    resource = r4.FHIRAbstractResource(resource_type="FHIRAbstractResource")
+    assert resource.resource_type == "FHIRAbstractResource"
+
+    resource = r4.Patient()
+    assert resource.resource_type == "Patient"
+
+    resource = r4.Patient(resource_type="Patient")
+    assert resource.resource_type == "Patient"
+
+    with pytest.raises(pydantic.ValidationError):
+        resource = r4.DomainResource(resource_type="Patient")
+
+    with pytest.raises(pydantic.ValidationError):
+        resource = r4.FHIRAbstractResource(resource_type="Patient")
 
     with pytest.raises(pydantic.ValidationError):
         resource = r4.FHIRAbstractResource(resource_type="FooBar")  # noqa : F841

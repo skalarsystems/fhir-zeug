@@ -96,10 +96,6 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             [clazz.resource_type for clazz in classes if clazz.resource_type]
         )
 
-        source_path = self.generator_config.template.fhir_resource_type_source
-        data = {"resource_types": resource_types}
-        self.do_render(data, source_path, f_out=f_out)
-
         self.copy_files(None, f_out)
 
         for clazz in classes:
