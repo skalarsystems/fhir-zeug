@@ -21,6 +21,24 @@ for subclass in inheritors(Resource):
 
 def from_dict(dict_: dict):
     """Factory to load resources directly.
-    
-    The resources will be instaciated based on their resourceType property."""
-    return RESOURCE_TYPE_MAP[dict_["resourceType"]](**dict_)
+
+    The resources will be instanciated based on their resourceType property."""
+
+    try:
+        if "resourceType" not in dict_:
+            raise ValueError("Key 'resourceType' must be provided.")
+
+        resource_type = dict_["resourceType"]
+        if resource_type not in RESOURCE_TYPE_MAP:
+            raise ValueError(f"ResourceType '{resource_type}' is not a valid Resource.")
+
+        resource_class = RESOURCE_TYPE_MAP[resource_type]
+        return resource_class(**dict_)
+
+    except ValueError as e:
+        # Raise a ValidationError if resourceType is not valid.
+        # Works for both simple entity and nested entities.
+        raise pydantic.ValidationError(
+            model=FHIRAbstractResource,
+            errors=[pydantic.error_wrappers.ErrorWrapper(exc=e, loc="resourceType")],
+        )
