@@ -26,4 +26,4 @@ def test_int_types() -> None:
         timing_repeat = r4.TimingRepeat(offset=1.0)
 
     with pytest.raises(pydantic.ValidationError):
-        timing_repeat = r4.TimingRepeat(count=0)
+        timing_repeat = r4.TimingRepeat(count=0)  # noqa : F841
