@@ -35,12 +35,6 @@ FHIRId = exact_regex_constr(regex=r"[A-Za-z0-9\-\.]{1,64}")
 
 FHIRBase64Binary = exact_regex_constr(regex=r"(\s*([0-9a-zA-Z\+/=]){4}\s*)+")
 
-FHIRInt = pydantic.conint(strict=True)
-
-FHIRUnsignedInt = pydantic.conint(strict=True, ge=0)
-
-FHIRPositiveInt = pydantic.conint(strict=True, gt=0)
-
 
 def validate_factory(cls):
     def validate_int_string(v):
