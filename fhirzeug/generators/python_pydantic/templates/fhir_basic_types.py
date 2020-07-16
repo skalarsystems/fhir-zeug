@@ -1,9 +1,14 @@
+import re
 import pydantic
+
+
+def exact_regex(regex):
+    return r"\A" + regex.lstrip(r"\A").rstrip(r"\Z") + r"\Z"
 
 
 def exact_regex_constr(**kwargs):
     if kwargs.get("regex") is not None:
-        kwargs["regex"] = r"\A" + kwargs["regex"].lstrip(r"\A").rstrip(r"\Z") + r"\Z"
+        kwargs["regex"] = exact_regex(kwargs["regex"])
     return pydantic.constr(**kwargs)
 
 
@@ -29,3 +34,61 @@ FHIROid = exact_regex_constr(regex=r"urn:oid:[0-2](\.(0|[1-9][0-9]*))+")
 FHIRId = exact_regex_constr(regex=r"[A-Za-z0-9\-\.]{1,64}")
 
 FHIRBase64Binary = exact_regex_constr(regex=r"(\s*([0-9a-zA-Z\+/=]){4}\s*)+")
+
+
+def validate_factory(cls):
+    def validate_int_string(v):
+        """Validate a string given a FHIR regex."""
+        if isinstance(v, str):
+            if re.match(exact_regex(cls.REGEX), v) is None:
+                msg = f"String does not match {cls.__name__} pattern : {cls.REGEX}"
+                raise ValueError(msg)
+            return int(v)
+        return v
+
+    return validate_int_string
+
+
+class FHIRInt(pydantic.conint(strict=True)):
+    """Integer field following FHIR specs.
+
+    https://www.hl7.org/fhir/datatypes.html#integer
+    """
+
+    REGEX = "[0]|[-+]?[1-9][0-9]*"
+
+    @classmethod
+    def __get_validators__(cls):
+        yield validate_factory(cls)
+        yield from super(FHIRInt, cls).__get_validators__()
+
+
+class FHIRUnsignedInt(pydantic.conint(strict=True, ge=0)):
+    """Unsigned integer field following FHIR specs.
+
+    https://www.hl7.org/fhir/datatypes.html#unsignedInt
+    """
+
+    REGEX = "[0]|([1-9][0-9]*)"
+
+    @classmethod
+    def __get_validators__(cls):
+        yield validate_factory(cls)
+        yield from super(FHIRUnsignedInt, cls).__get_validators__()
+
+
+class FHIRPositiveInt(pydantic.conint(strict=True, gt=0)):
+    """Positive integer field following FHIR specs.
+
+    Warning : FHIR Spec regex : "+?[1-9][0-9]*" seems invalid
+              I think that intended use is "[+]?[1-9][0-9]*"
+
+    https://www.hl7.org/fhir/datatypes.html#positiveInt
+    """
+
+    REGEX = "[+]?[1-9][0-9]*"
+
+    @classmethod
+    def __get_validators__(cls):
+        yield validate_factory(cls)
+        yield from super(FHIRPositiveInt, cls).__get_validators__()

@@ -17,6 +17,9 @@ from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import (
     FHIRBase64Binary,
     FHIRId,
     FHIROid,
+    FHIRInt,
+    FHIRUnsignedInt,
+    FHIRPositiveInt,
 )
 
 
@@ -32,6 +35,9 @@ class ExampleModel(pydantic.BaseModel):
     oid: typing.Optional[FHIROid]
     fhir_id: typing.Optional[FHIRId]
     decimal: typing.Optional[decimal.Decimal]
+    fhir_int: typing.Optional[FHIRInt]
+    fhir_unsigned_int: typing.Optional[FHIRUnsignedInt]
+    fhir_positive_int: typing.Optional[FHIRPositiveInt]
 
 
 def test_fhirstring():
@@ -168,3 +174,78 @@ def test_decimal():
     with pytest.raises(pydantic.ValidationError):
         model = ExampleModel(decimal="FOO")
     model = ExampleModel(decimal=3.14000000000000012434497875801)  # noqa : F841
+
+
+def test_fhir_int():
+    """Test FHIRInt
+    """
+    model = ExampleModel(fhir_int=-123456)
+    model = ExampleModel(fhir_int="-123456")
+    model = ExampleModel(fhir_int=0)
+    model = ExampleModel(fhir_int="0")
+    model = ExampleModel(fhir_int=123456)
+    model = ExampleModel(fhir_int="123456")
+    assert model.fhir_int == 123456
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_int=1.234)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_int=0.0)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_int="-1.234")
+
+
+def test_fhir_unsigned_int():
+    """Test FHIRUnsignedInt
+    """
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_unsigned_int=-123456)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_unsigned_int="-123456")
+
+    model = ExampleModel(fhir_unsigned_int=0)
+    model = ExampleModel(fhir_unsigned_int="0")
+    model = ExampleModel(fhir_unsigned_int=123456)
+    model = ExampleModel(fhir_unsigned_int="123456")
+    assert model.fhir_unsigned_int == 123456
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_unsigned_int=1.234)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_unsigned_int=0.0)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_unsigned_int="-1.234")
+
+
+def test_fhir_positive_int():
+    """Test FHIRUnsignedInt
+    """
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int=-123456)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int="-123456")
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int=0)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int="0")
+
+    model = ExampleModel(fhir_positive_int=123456)
+    model = ExampleModel(fhir_positive_int="123456")
+    assert model.fhir_positive_int == 123456
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int=1.234)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int=0.0)
+
+    with pytest.raises(pydantic.ValidationError):
+        model = ExampleModel(fhir_positive_int="-1.234")
