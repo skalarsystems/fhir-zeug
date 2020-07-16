@@ -81,9 +81,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
         """
         for manual_profile in self.generator_config.manual_profiles:
             origpath = manual_profile.origpath
-            if not origpath:
-                continue
-            if origpath.exists():
+            if origpath and origpath.exists():
                 if f_out:
                     with origpath.open("r") as f_in:
                         shutil.copyfileobj(f_in, f_out)
@@ -95,6 +93,14 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
     def render(self, f_out):
         self.copy_files(None, f_out)
 
+        classes = self.get_classes_to_render()
+        for clazz in classes:
+            data = {"clazz": clazz}
+            source_path = self.generator_config.template.resource_source
+            self.do_render(data, source_path, f_out=f_out)
+
+    def get_classes_to_render(self):
+        """Recursively fetch all classes to render."""
         derive_graph = {}
 
         # sort according to derive
@@ -118,12 +124,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
                 if elm not in classes:
                     classes.append(elm)
 
-        for clazz in classes:
-            data = {
-                "clazz": clazz,
-            }
-            source_path = self.generator_config.template.resource_source
-            self.do_render(data, source_path, f_out=f_out)
+        return classes
 
 
 class FHIRValueSetRenderer(FHIRRenderer):
