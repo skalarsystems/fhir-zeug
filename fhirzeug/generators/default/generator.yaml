@@ -90,9 +90,9 @@ mapping_rules:
     Any: Resource
     Practitioner.role: PractRole  # to avoid Practinioner.role and PractitionerRole generating the same class
     boolean: bool
-    integer: int
-    positiveInt: int
-    unsignedInt: int
+    integer: FHIRInt
+    positiveInt: FHIRPositiveInt
+    unsignedInt: FHIRUnsignedInt
     date: FHIRDate
     dateTime: FHIRDateTime
     instant: FHIRInstant
