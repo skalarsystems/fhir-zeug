@@ -56,10 +56,6 @@ class DocEnum(enum.Enum):
         return obj
 
 
-class FHIRDecimal(decimal.Decimal):
-    pass
-
-
 class DecimalEncoder(json.JSONEncoder):
     def encode(self, obj):
         if isinstance(obj, Mapping):

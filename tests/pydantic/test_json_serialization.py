@@ -1,13 +1,10 @@
 import decimal
 import typing
-import json
 
 import pytest
 
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
-    FHIRDecimal,
-    DecimalEncoder,
 )
 
 
