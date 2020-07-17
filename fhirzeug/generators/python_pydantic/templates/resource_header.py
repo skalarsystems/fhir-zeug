@@ -78,8 +78,11 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def json_dumps(*args, **kwargs):
-    print("dumps")
     return json.dumps(*args, **kwargs, cls=DecimalEncoder)
+
+
+def json_loads(*args, **kwargs):
+    return json.loads(*args, **kwargs, parse_float=decimal.Decimal)
 
 
 class FHIRAbstractBase(pydantic.BaseModel):
@@ -104,6 +107,7 @@ class FHIRAbstractBase(pydantic.BaseModel):
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
         json_dumps = json_dumps
+        json_loads = json_loads
 
 
 def _without_empty_items(obj: typing.Any):
