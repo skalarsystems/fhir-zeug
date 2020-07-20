@@ -8,7 +8,7 @@ import json
 import datetime
 from pathlib import Path
 import stringcase  # type: ignore
-from typing import Dict, List, Optional, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 
 from .logger import logger
 from . import fhirclass
@@ -94,26 +94,28 @@ class FHIRSpec(object):
                     codesystem = FHIRCodeSystem(self, resource)
                     self.found_codesystem(codesystem)
                 else:
-                    logger.warning(
-                        "CodeSystem with no concepts: {}".format(resource["url"])
-                    )
+                    logger.warning(f"CodeSystem with no concepts: {resource['url']}")
         logger.info(
-            "Found {} ValueSets and {} CodeSystems".format(
-                len(self.valuesets), len(self.codesystems)
-            )
+            f"Found {len(self.valuesets)} ValueSets and {len(self.codesystems)} CodeSystems"
         )
 
     def found_codesystem(self, codesystem):
         if codesystem.url not in self.generator_config.mapping_rules.enum_ignore:
             self.codesystems[codesystem.url] = codesystem
 
-    def valueset_with_uri(self, uri):
+    def valueset_with_uri(self, uri) -> Optional["FHIRValueSet"]:
         assert uri
-        return self.valuesets.get(uri)
+        if uri not in self.valuesets:
+            logger.warning(f"Valueset not found for URI : {uri}")
+            return None
+        return self.valuesets[uri]
 
-    def codesystem_with_uri(self, uri):
+    def codesystem_with_uri(self, uri) -> Optional["FHIRCodeSystem"]:
         assert uri
-        return self.codesystems.get(uri)
+        if uri not in self.codesystems:
+            logger.warning(f"Codesystem not found for URI : {uri}")
+            return None
+        return self.codesystems[uri]
 
     # MARK: Handling Profiles
 
@@ -201,13 +203,13 @@ class FHIRSpec(object):
         if classname is None or len(classname) == 0:
             return None
 
-        # if we have a parent, do we have a mapped class?
-        pathname = (
-            "{}.{}".format(parent_name, classname) if parent_name is not None else None
-        )
         classmap = self.generator_config.mapping_rules.classmap
-        if pathname is not None and pathname in classmap:
-            return classmap[pathname]
+
+        if parent_name is not None:
+            # if we have a parent, do we have a mapped class?
+            pathname = f"{parent_name}.{classname}"
+            if pathname in classmap:
+                return classmap[pathname]
 
         # is our plain class mapped?
         if classname in classmap:
@@ -319,21 +321,28 @@ class FHIRValueSetEnum(object):
     """ Holds on to parsed `FHIRValueSet` properties.
     """
 
-    def __init__(self, name, restricted_to, value_set):
+    def __init__(
+        self,
+        name: str,
+        restricted_to: List[str],
+        value_set: "FHIRValueSet",
+        is_codesystem_known: bool,
+    ):
         self.name = name
         self.restricted_to = restricted_to if len(restricted_to) > 0 else None
         self.value_set = value_set
-        self.represents_class = True  # required for FHIRClass compatibily
-        self.module = name  # required for FHIRClass compatibily
-        self.name_if_class = name  # required for FHIRClass compatibily
-        self.superclass_name = None  # required for FHIRClass compatibily
-        self.path = None  # required for FHIRClass compatibily
+        self.is_codesystem_known = is_codesystem_known
+        self.represents_class = True  # required for FHIRClass compatibility
+        self.module = name  # required for FHIRClass compatibility
+        self.name_if_class = name  # required for FHIRClass compatibility
+        self.superclass_name = None  # required for FHIRClass compatibility
+        self.path = None  # required for FHIRClass compatibility
 
     @property
-    def definition(self):
+    def definition(self) -> "FHIRValueSet":
         return self.value_set
 
-    def name_of_resource(self):  # required for FHIRClass compatibily
+    def name_of_resource(self) -> None:  # required for FHIRClass compatibility
         return None
 
 
@@ -341,7 +350,7 @@ class FHIRValueSet(object):
     """ Holds on to ValueSets bundled with the spec.
     """
 
-    def __init__(self, spec, set_dict):
+    def __init__(self, spec: "FHIRSpec", set_dict: Dict[str, Any]):
         self.spec = spec
         self.definition = set_dict
         self.url = set_dict.get("url")
@@ -356,7 +365,7 @@ class FHIRValueSet(object):
                 "description"
             )
 
-        self._enum = None
+        self._enum: Optional["FHIRValueSetEnum"] = None
 
     @property
     def short(self):
@@ -367,12 +376,46 @@ class FHIRValueSet(object):
         return self.definition.get("description")
 
     @property
-    def enum(self):
+    def enum(self) -> Optional[FHIRValueSetEnum]:
         """ Returns FHIRValueSetEnum if this valueset can be represented by one.
         """
         if self._enum is not None:
             return self._enum
 
+        include = self.__safely_get_single_include()
+        if include is None:
+            return None
+
+        system = include.get("system")
+        if system is None:
+            return None
+
+        # alright, this is a ValueSet with 1 include and a system, is there a CodeSystem?
+        cs = self.spec.codesystem_with_uri(system)
+        is_codesystem_known = True
+        if cs is None or not cs.generate_enum:
+            # If no CodeSystem is found, we build an unofficial enum
+            # Example : system = "http://unitsofmeasure.org" is not defined in FHIR
+            is_codesystem_known = False
+            cs_name = "unknown_codesystem_enum"
+        else:
+            cs_name = cs.name
+
+        # Restrict CodeSystem to subset of concepts
+        restricted_to = []
+        for concept in include.get("concept", []):
+            assert "code" in concept
+            restricted_to.append(concept["code"])
+
+        self._enum = FHIRValueSetEnum(
+            name=cs_name,
+            restricted_to=restricted_to,
+            value_set=self,
+            is_codesystem_known=is_codesystem_known,
+        )
+        return self._enum
+
+    def __safely_get_single_include(self) -> Optional[Dict[str, Any]]:
         include = None
 
         if self.dstu2_inlined_codesystem is not None:
@@ -380,44 +423,22 @@ class FHIRValueSet(object):
         else:
             compose = self.definition.get("compose")
             if compose is None:
-                raise Exception(
-                    f"Currently only composed ValueSets are supported. {self.definition}"
-                )
+                msg = f"Currently only composed ValueSets are supported. {self.definition}"
+                raise Exception(msg)
             if "exclude" in compose:
-                raise Exception("Not currently supporting 'exclude' on ValueSet")
-            include = compose.get("include") or compose.get(
-                "import"
-            )  # "import" is for DSTU-2 compatibility
+                msg = "Not currently supporting 'exclude' on ValueSet"
+                raise Exception(msg)
 
-        if 1 != len(include):
+            # "import" is for DSTU-2 compatibility
+            include = compose.get("include") or compose.get("import") or []
+
+        if len(include) != 1:
             logger.warning(
-                "Ignoring ValueSet with more than 1 includes ({}: {})".format(
-                    len(include), include
-                )
+                f"Ignoring ValueSet with more than 1 includes ({len(include)}: {include})"
             )
             return None
 
-        system = include[0].get("system")
-        if system is None:
-            return None
-
-        # alright, this is a ValueSet with 1 include and a system, is there a CodeSystem?
-        cs = self.spec.codesystem_with_uri(system)
-        if cs is None or not cs.generate_enum:
-            return None
-
-        # do we only allow specific concepts?
-        restricted_to = []
-        concepts = include[0].get("concept")
-        if concepts is not None:
-            for concept in concepts:
-                assert "code" in concept
-                restricted_to.append(concept["code"])
-
-        self._enum = FHIRValueSetEnum(
-            name=cs.name, restricted_to=restricted_to, value_set=self
-        )
-        return self._enum
+        return include[0]
 
 
 class FHIRCodeSystem(object):
@@ -445,12 +466,13 @@ class FHIRCodeSystem(object):
 
         if resource.get("experimental"):
             return
-        self.generate_enum = "complete" == resource["content"]
+
+        if resource["content"] == "complete":
+            self.generate_enum = True
+
         if not self.generate_enum:
-            logger.debug(
-                'Will not generate enum for CodeSystem "{}" whose content is {}'.format(
-                    self.url, resource["content"]
-                )
+            logger.warning(
+                f"Will not generate enum for CodeSystem '{self.url}' whose content is {resource['content']}"
             )
             return
 
@@ -458,9 +480,7 @@ class FHIRCodeSystem(object):
         if len(concepts) > 200:
             self.generate_enum = False
             logger.info(
-                'Will not generate enum for CodeSystem "{}" because it has > 200 ({}) concepts'.format(
-                    self.url, len(concepts)
-                )
+                f"Will not generate enum for CodeSystem '{self.url}' because it has > 200 ({len(concepts)}) concepts"
             )
             return
 
@@ -472,9 +492,7 @@ class FHIRCodeSystem(object):
             if c["code"][:1].isdigit():
                 self.generate_enum = False
                 logger.info(
-                    'Will not generate enum for CodeSystem "{}" because at least one concept code starts with a number'.format(
-                        self.url
-                    )
+                    "Will not generate enum for CodeSystem '{self.url}' because at least one concept code starts with a number"
                 )
                 return None
 
@@ -1046,12 +1064,12 @@ class FHIRStructureDefinitionElementDefinition(object):
             and self.binding.has_valueset
         ):
             uri = self.binding.valueset_uri
-            if "http://hl7.org/fhir" != uri[:19]:
+            if not uri.startswith("http://hl7.org/fhir"):
                 logger.debug('Ignoring foreign ValueSet "{}"'.format(uri))
                 return
+
             # remove version from canonical URI, if present, e.g. "http://hl7.org/fhir/ValueSet/name-use|4.0.0"
-            if "|" in uri:
-                uri = uri.split("|")[0]
+            uri = uri.split("|")[0]
 
             valueset = self.element.profile.spec.valueset_with_uri(uri)
             if valueset is None:

@@ -27,3 +27,17 @@ def test_int_types() -> None:
 
     with pytest.raises(pydantic.ValidationError):
         timing_repeat = r4.TimingRepeat(count=0)  # noqa : F841
+
+
+def test_generated_enums() -> None:
+    r4.Account(status="active")
+
+    with pytest.raises(pydantic.ValidationError):
+        # AccountStatus is a `DocEnum` object.
+        account = r4.Account(status="not_a_predefined_status")  # noqa : F841
+
+    r4.TimingRepeat(duration_unit="s")
+
+    with pytest.raises(pydantic.ValidationError):
+        # DurationUnit is a typing.Literal field.
+        repeat = r4.TimingRepeat(duration_unit="not_a_predefined_unit")  # noqa : F841
