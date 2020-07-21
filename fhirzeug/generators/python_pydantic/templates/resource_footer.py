@@ -42,3 +42,11 @@ def from_dict(dict_: dict):
             model=FHIRAbstractResource,
             errors=[pydantic.error_wrappers.ErrorWrapper(exc=e, loc="resourceType")],
         )
+
+
+def from_raw(*args, **kwargs):
+    """Factory to load resources directly from the raw json string.
+
+    The resources will be instanciated based on their resourceType property."""
+
+    return from_dict(json_loads(*args, **kwargs))
