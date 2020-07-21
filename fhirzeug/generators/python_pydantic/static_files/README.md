@@ -10,17 +10,22 @@ Generally this generated code tries to stick as close as possible to the [FHIR J
 
 ## Empty Strings
 
-> String property values can never be empty. Either the property is absent, or it is present with at least one character of content.
+> String property values can never be empty. Either the property is absent, or it is present with at
+> least one character of content. - https://www.hl7.org/fhir/STU3/json.html
 
 Additionally whitespaces are stripped:
 
-> Note: This means that a string that consists only of whitespace could be trimmed to nothing, which would be treated as an invalid element value. Therefore strings SHOULD always contain non-whitespace content. - https://www.hl7.org/fhir/datatypes.html#primitive
+> Note: This means that a string that consists only of whitespace could be trimmed to nothing, which > would be treated as an invalid element value. Therefore strings SHOULD always contain
+> non-whitespace content. - https://www.hl7.org/fhir/datatypes.html#primitive
 
-That means empty strings are interpreted as `null` values. This could lead to invalid arrays (`[""]`).
+That means empty strings are interpreted as `null` values.
+This could lead to invalid arrays(`[""]`). This follows the behavior from
+[HAPI](https://hapifhir.io/) and [Vonk](https://fire.ly/products/vonk/vonk-fhir-server/).
 
 ## DateTime Values
 
-Datetime values are strings as well. That means an empty
+Datetime values are strings as well. That means an empty string or a string with whitespaces is
+threaded as a `null` value. Which then is not set at all.
 
 ## `null` Values
 
