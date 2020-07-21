@@ -71,3 +71,10 @@ The class of this property is derived from `element.type`, which is expected to 
 [hl7]: http://hl7.org/
 [fhir]: http://www.hl7.org/implement/standards/fhir/
 [jinja]: http://jinja.pocoo.org/
+
+---
+
+Maintained by:
+
+![BlackTusk](.logos/blacktusk.png)
+![Skalar Systems](.logos/skalar-systems.png)
