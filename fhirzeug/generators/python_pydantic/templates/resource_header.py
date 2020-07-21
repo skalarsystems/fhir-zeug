@@ -3,6 +3,7 @@ import decimal
 import stringcase
 import typing
 from collections.abc import Mapping
+import json
 
 
 import pydantic
@@ -55,15 +56,29 @@ class DocEnum(enum.Enum):
         return obj
 
 
-def decimal_to_json(value: decimal.Decimal) -> typing.Union[float, int]:
-    """Convert a decimal to float or int, depending on if it has a decimal part.
+class DecimalEncoder(json.JSONEncoder):
+    def encode(self, obj):
+        if isinstance(obj, Mapping):
+            return (
+                "{"
+                + ", ".join(
+                    f"{self.encode(k)}: {self.encode(v)}" for (k, v) in obj.items()
+                )
+                + "}"
+            )
+        if isinstance(obj, typing.Iterable) and (not isinstance(obj, str)):
+            return "[" + ", ".join(map(self.encode, obj)) + "]"
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+        return super().encode(obj)
 
-    It is for JSON serialization - to serialize it in the same form as was
-    originally provided.
-    """
-    if value.as_tuple().exponent == 0:
-        return int(value)
-    return float(value)
+
+def json_dumps(*args, **kwargs):
+    return json.dumps(*args, **kwargs, cls=DecimalEncoder)
+
+
+def json_loads(*args, **kwargs):
+    return json.loads(*args, **kwargs, parse_float=decimal.Decimal)
 
 
 class FHIRAbstractBase(pydantic.BaseModel):
@@ -87,12 +102,8 @@ class FHIRAbstractBase(pydantic.BaseModel):
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
-        json_encoders = {
-            # Pydantic by default converts decimals to floats in JSON output
-            # (adding `.0` for integer). We prefer to leave them in the original
-            # form.
-            decimal.Decimal: decimal_to_json
-        }
+        json_dumps = json_dumps
+        json_loads = json_loads
 
 
 def _without_empty_items(obj: typing.Any):
