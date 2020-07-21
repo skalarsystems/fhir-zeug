@@ -77,4 +77,5 @@ The class of this property is derived from `element.type`, which is expected to 
 Maintained by:
 
 ![BlackTusk](.logos/blacktusk.png)
+
 ![Skalar Systems](.logos/skalar-systems.png)
