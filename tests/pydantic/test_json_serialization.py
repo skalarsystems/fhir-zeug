@@ -34,4 +34,3 @@ def test_decimal_serialization(input, expected):
 
     if input:
         assert str(ExampleModel.parse_raw(serialized).decimal) == str(input)
-
