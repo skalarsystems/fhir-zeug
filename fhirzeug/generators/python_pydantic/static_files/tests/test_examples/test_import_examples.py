@@ -76,10 +76,13 @@ def test_read_write(fhir_file: Path):
 
     assert r4.json_loads(json_str) == doc
 
+    # Check if both strings have same length
     norm_in = _normalize(json_in)
     norm_out = _normalize(json_str)
     assert len(norm_in) == len(norm_out)
 
+    # Check if both strings contains exactly the same characters
+    # If both strings have same length and same characters, we assume serialization is good
     counter_in = Counter(norm_in)
     counter_out = Counter(norm_out)
     assert counter_in == counter_out
