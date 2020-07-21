@@ -38,6 +38,25 @@ It will:
   - source files for python pydantic
   - a full python package also available (here)[https://pypi.org/project/pydantic-fhir/]).
 
+## Technical explanations
+
+### About ValueSets and CodeSystems
+
+Article to understand the difference in FHIR between a ValueSets and a CodeSystems : https://fhir-drills.github.io/ValueSet-And-CodeSystem.html .
+
+FHIR Specification provides different ways to define a ValueSet. At the moment, FHIRzeug implementation only handle a few cases :
+- If a ValueSet is based on a single CodeSystem and this CodeSystem is defined in FHIR, then a `DocEnum` object is generated to validate this ValueSet.  
+**Example :** ValueSet https://www.hl7.org/fhir/valueset-account-status.html is based on CodeSystem https://www.hl7.org/fhir/codesystem-account-status.html .
+- If a ValueSet is based on a single CodeSystem but this CodeSystem is not included in the FHIR specification, FHIRzeug do not implement it as an Enum. If FHIR provides an exhaustive list of possible values (e.g. : under `spec["compose"]["include"][0]["concept"]`), the data is validated against this list using a `typing.Literal` type.  
+**Warning :** this is different from having access to the full CodeSystem. Especially, there is no documentation.  
+**Example :** ValueSet https://www.hl7.org/fhir/valueset-duration-units.html .
+- If a ValueSet is based on a single CodeSystem, this CodeSystem is not included in FHIR specification and the ValueSet is defined as a filter of the fields of the CodeSystem, no specific validation is implemented.  
+**Example :** https://www.hl7.org/fhir/valueset-all-distance-units.html .
+- If a ValueSet is based on several CodeSystems, no specific validation is implemented.
+
+**Note :** when no specific validation is implemented, the attribute has the generic type `FHIRCode` which is a constrained string with the very permissive regex `[^\s]+(\s[^\s]+)*`.
+
+
 # Obsolete
 
 This script does its job for the most part, but it doesn't yet handle all FHIR peculiarities and there's no guarantee the output is correct or complete.

@@ -3,23 +3,30 @@
 class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     """ {{ clazz.short|wordwrap(width=75, wrapstring="\n    ") }}.
 {%- if clazz.formal %}
-    
+
     {{ clazz.formal|wordwrap(width=75, wrapstring="\n    ") }}
 {%- endif %}
     """
+
 {%- if clazz.resource_type %}
-    resource_type = "{{ clazz.resource_type }}"
+    resource_type: typing.Literal["{{ clazz.resource_type }}"] = "{{ clazz.resource_type }}"
 {%- endif %}
 
+    class Meta:
+        profile: typing.List[str] =[
+        {% for url in clazz.urls %}   "{{url}}",
+        {% endfor%}]
+        """ Profiles this resource claims to conform to.
+        List of `str` items. """
 
 
-    # {{clazz.properties}}
-  
 {% set enums = [] %}
 {% for prop in clazz.properties %}
     {%- if prop.enum %}
-        {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
-    {% endif %}  
+        {%- if prop.enum.is_codesystem_known %}
+            {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
+        {%- endif %}
+    {% endif %}
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
         {%- set type_name = "\"{}\"".format(type_name) %}
@@ -31,6 +38,15 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
             {%- set type_name = "typing.List[{}]".format(type_name) %}
         {%- endif %}
     {%- endif %}
+    {%- if prop.enum %}
+        {%- if not prop.enum.is_codesystem_known and prop.enum.restricted_to %}
+            {%- set tmp_list = [] %}
+            {%- for code in prop.enum.restricted_to %}
+                {% do tmp_list.append('"' + code + '"') %}
+            {%- endfor %}
+            {%- set type_name = 'typing.Literal[{}]'.format(tmp_list |join(", ")) %}
+        {%- endif %}
+    {% endif %}
     {%- if prop.is_optional or prop.choice_of_type %}{# one of many https://www.hl7.org/fhir/formats.html#choice #}
         {%- set type_name = "typing.Optional[{}]".format(type_name) %}
     {%- endif %}
@@ -47,6 +63,8 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {%- if prop.desired_classname == "Resource" %}
     @pydantic.validator("{{ prop.name | snake_case }}", pre=True,  each_item=True)
     def resource_factory(cls, value):
+        if isinstance(value, Resource):
+            return value
         return from_dict(value)
 {%- endif %}
 {% endfor %}

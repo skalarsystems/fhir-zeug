@@ -18,33 +18,17 @@ class FHIRRenderer:
     """ Superclass for all renderer implementations.
     """
 
-    def __init__(self, spec: "FHIRSpec", settings, generator_module):
+    def __init__(self, spec: "FHIRSpec"):
         self.spec = spec
-        self.settings = self.__class__.cleaned_settings(settings)
+        self.generator_config = spec.generator_config
         self.jinjaenv = Environment(
-            loader=PackageLoader(generator_module, self.settings.tpl_base)
+            loader=PackageLoader(
+                self.generator_config.module, self.generator_config.template.source,
+            ),
+            extensions=["jinja2.ext.do"],  # Allow the "do" statement in Jinja
         )
         self.jinjaenv.filters["wordwrap"] = do_wordwrap
         self.jinjaenv.filters["snake_case"] = snakecase
-
-    @classmethod
-    def cleaned_settings(cls, settings):
-        """ Splits paths at '/' and re-joins them using os.path.join().
-        """
-        settings.tpl_base = os.path.join(*settings.tpl_base.split("/"))
-        settings.tpl_resource_target = os.path.join(
-            *settings.tpl_resource_target.split("/")
-        )
-        settings.tpl_factory_target = os.path.join(
-            *settings.tpl_factory_target.split("/")
-        )
-        settings.tpl_unittest_target = os.path.join(
-            *settings.tpl_unittest_target.split("/")
-        )
-        settings.tpl_resource_target = os.path.join(
-            *settings.tpl_resource_target.split("/")
-        )
-        return settings
 
     def render(self, f_out: Optional[TextIO] = None) -> None:
         """ The main rendering start point, for subclasses to override.
@@ -61,7 +45,7 @@ class FHIRRenderer:
         """ Render the given data using a Jinja2 template, writing to the file
         at the target path.
 
-        :param template_name: The Jinja2 template to render, located in settings.tpl_base
+        :param template_name: The Jinja2 template to render
         :param target_path: Output path
         """
 
@@ -69,9 +53,7 @@ class FHIRRenderer:
             template = self.jinjaenv.get_template(template_name)
         except TemplateNotFound:
             logger.error(
-                'Template "{}" not found in «{}», cannot render'.format(
-                    template_name, self.settings.tpl_base
-                )
+                f'Template "{template_name}" not found in "{self.generator_config.template.source}", cannot render'
             )
             return
 
@@ -96,30 +78,30 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
     """
 
     def copy_files(self, target_dir, f_out):
-        """ Copy base resources to the target location, according to settings.
+        """ Copy base resources to the target location, according to config.
         """
-        for origpath, _, _ in self.settings.manual_profiles:
-            if not origpath:
-                continue
-            filepath = os.path.join(*origpath.split("/"))
-            if os.path.exists(filepath):
-
+        for manual_profile in self.generator_config.manual_profiles:
+            origpath = manual_profile.origpath
+            if origpath and origpath.exists():
                 if f_out:
-                    with open(filepath, "r") as f_in:
+                    with origpath.open("r") as f_in:
                         shutil.copyfileobj(f_in, f_out)
-
                 else:
-                    tgt = os.path.join(target_dir, os.path.basename(filepath))
-                    logger.info(
-                        "Copying manual profiles in {} to {}".format(
-                            os.path.basename(filepath), tgt
-                        )
-                    )
-                    shutil.copyfile(filepath, tgt)
+                    tgt = target_dir / origpath.name
+                    logger.info(f"Copying manual profiles in {tgt.name} to {tgt}")
+                    shutil.copyfile(origpath, tgt)
 
     def render(self, f_out):
         self.copy_files(None, f_out)
 
+        classes = self.get_classes_to_render()
+        for clazz in classes:
+            data = {"clazz": clazz}
+            source_path = self.generator_config.template.resource_source
+            self.do_render(data, source_path, f_out=f_out)
+
+    def get_classes_to_render(self):
+        """Recursively fetch all classes to render."""
         derive_graph = {}
 
         # sort according to derive
@@ -143,83 +125,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
                 if elm not in classes:
                     classes.append(elm)
 
-        for clazz in classes:
-            # classes = sorted(profile.writable_classes(), key=lambda x: x.name)
-            # if 0 == len(classes):
-            #     if (
-            #         profile.url is not None
-            #     ):  # manual profiles have no url and usually write no classes
-            #         logger.info(
-            #             'Profile "{}" returns zero writable classes, skipping'.format(
-            #                 profile.url
-            #             )
-            #         )
-            #     continue
-
-            # imports = profile.needed_external_classes()
-            # data = {
-            #     "profile": profile,
-            #     "info": self.spec.info,
-            #     "imports": imports,
-            #     "classes": classes,
-            # }
-
-            data = {"clazz": clazz}
-            # ptrn = (
-            #     profile.targetname.lower()
-            #     if self.settings.resource_modules_lowercase
-            #     else profile.targetname
-            # )
-            source_path = self.settings.tpl_resource_source
-            # target_name = self.settings.tpl_resource_target_ptrn.format(ptrn)
-            # target_path = os.path.join(self.settings.tpl_resource_target, target_name)
-
-            self.do_render(data, source_path, None, f_out)
-
-
-class FHIRFactoryRenderer(FHIRRenderer):
-    """ Write factories for FHIR classes.
-    """
-
-    def render(self):
-        classes = []
-        for profile in self.spec.writable_profiles():
-            classes.extend(profile.writable_classes())
-
-        data = {
-            "info": self.spec.info,
-            "classes": sorted(classes, key=lambda x: x.name),
-        }
-        self.do_render(
-            data, self.settings.tpl_factory_source, self.settings.tpl_factory_target
-        )
-
-
-class FHIRDependencyRenderer(FHIRRenderer):
-    """ Puts down dependencies for each of the FHIR resources. Per resource
-    class will grab all class/resource names that are needed for its
-    properties and add them to the "imports" key. Will also check
-    classes/resources may appear in references and list those in the
-    "references" key.
-    """
-
-    def render(self):
-        data = {"info": self.spec.info}
-        resources = []
-        for profile in self.spec.writable_profiles():
-            resources.append(
-                {
-                    "name": profile.targetname,
-                    "imports": profile.needed_external_classes(),
-                    "references": profile.referenced_classes(),
-                }
-            )
-        data["resources"] = sorted(resources, key=lambda x: x["name"])
-        self.do_render(
-            data,
-            self.settings.tpl_dependencies_source,
-            self.settings.tpl_dependencies_target,
-        )
+        return classes
 
 
 class FHIRValueSetRenderer(FHIRRenderer):
@@ -227,12 +133,6 @@ class FHIRValueSetRenderer(FHIRRenderer):
     """
 
     def render(self, f_out):
-        if not self.settings.tpl_codesystems_source:
-            logger.info(
-                "Not rendering value sets and code systems since `tpl_codesystems_source` is not set"
-            )
-            return
-
         systems = [v for k, v in self.spec.codesystems.items()]
         for system in sorted(systems, key=lambda x: x.name):
             if not system.generate_enum:
@@ -242,9 +142,8 @@ class FHIRValueSetRenderer(FHIRRenderer):
                 "info": self.spec.info,
                 "system": system,
             }
-            # target_name = self.settings.tpl_codesystems_target_ptrn.format(system.name)
-            # target_path = os.path.join(self.settings.tpl_resource_target, target_name)
-            self.do_render(data, self.settings.tpl_codesystems_source, None, f_out)
+            source_path = self.generator_config.template.codesystems_source
+            self.do_render(data, source_path, f_out=f_out)
 
 
 # There is a bug in Jinja's wordwrap (inherited from `textwrap`) in that it

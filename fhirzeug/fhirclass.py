@@ -1,5 +1,5 @@
 from .logger import logger
-from typing import List, Dict, Optional, TYPE_CHECKING
+from typing import List, Dict, Optional, Set, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .fhirspec import FHIRStructureDefinitionElement, FHIRElementType
@@ -19,6 +19,7 @@ class FHIRClass:
         assert element.represents_class
         class_name = element.name_if_class
         if class_name in cls.known:
+            cls.known[class_name].add_url(element.profile.url)
             return cls.known[class_name], False
 
         klass = cls(element, class_name)
@@ -41,6 +42,8 @@ class FHIRClass:
         self.formal: str = element.definition.formal
         self.properties: List["FHIRClassProperty"] = []
         self.expanded_nonoptionals: Dict[str, List["FHIRClassProperty"]] = {}
+        self.__urls: Set[str] = set()
+        self.add_url(element.profile.url)
 
     def add_property(self, prop: "FHIRClassProperty") -> None:
         """ Add a property to the receiver.
@@ -54,11 +57,9 @@ class FHIRClass:
         # generic resource
         for existing in self.properties:
             if existing.name == prop.name:
-                if 0 == len(existing.reference_to_names):
+                if len(existing.reference_to_names) == 0:
                     logger.warning(
-                        'Already have property "{}" on "{}", which is only allowed for references'.format(
-                            prop.name, self.name
-                        )
+                        f'Already have property "{prop.name}" on "{self.name}", which is only allowed for references'
                     )
                 else:
                     existing.reference_to_names.extend(prop.reference_to_names)
@@ -79,6 +80,14 @@ class FHIRClass:
                 )
             else:
                 self.expanded_nonoptionals[prop.name] = [prop]
+
+    def add_url(self, url: Optional[str]) -> None:
+        if url is not None:
+            self.__urls.add(url)
+
+    @property
+    def urls(self) -> List[str]:
+        return list(self.__urls)
 
     @property
     def nonexpanded_properties(self) -> List["FHIRClassProperty"]:
@@ -230,9 +239,9 @@ class FHIRClassProperty:
         self.path = element.path
 
         # https://www.hl7.org/fhir/formats.html#choice
-        self.choice_of_type: Optional[str] = (
-            None  # assign if this property has been expanded from "property[x]"
-        )
+        # assign if this property has been expanded from "property[x]"
+        self.choice_of_type: Optional[str] = None
+
         if not type_name:
             type_name = type_obj.code
 
@@ -240,15 +249,13 @@ class FHIRClassProperty:
         if "[x]" in name:
             assert type_name is not None
             self.choice_of_type = spec.safe_property_name(name.replace("[x]", ""))
-            name = name.replace(
-                "[x]", "{}{}".format(type_name[:1].upper(), type_name[1:])
-            )
+            name = name.replace("[x]", type_name[:1].upper() + type_name[1:])
 
         self.orig_name: str = name
         self.name: str = spec.safe_property_name(name)
         self.parent_name: str = element.parent_name
         self.class_name: str = spec.class_name_for_type_if_property(type_name)
-        self.enum = element.enum if "code" == type_name else None
+        self.enum = element.enum if type_name == "code" else None
         self.module_name = (
             None  # should only be set if it's an external module (think Python)
         )
@@ -256,7 +263,7 @@ class FHIRClassProperty:
         self.is_native = (
             False if self.enum else spec.class_name_is_native(self.class_name)
         )
-        self.is_array = True if "*" == element.n_max else False
+        self.is_array = True if element.n_max == "*" else False
         self.is_summary = element.is_summary
         self.is_summary_n_min_conflict = element.summary_n_min_conflict
         self.nonoptional: bool = (
@@ -291,7 +298,12 @@ class FHIRClassProperty:
 
     @property
     def desired_classname(self) -> str:
-        return self.enum.name if self.enum is not None else self.class_name
+        if self.enum and self.enum.is_codesystem_known:
+            return self.enum.name
+        elif self.enum and self.enum.restricted_to:
+            return "typing.Literal"
+        else:
+            return self.class_name
 
     @property
     def nonexpanded_name(self) -> str:

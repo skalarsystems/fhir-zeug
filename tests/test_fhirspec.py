@@ -9,7 +9,8 @@ from fhirzeug.fhirspec import (
 
 def test_writable_profiles(spec: FHIRSpec):
     check = any(
-        item in spec.settings.manual_profiles for item in spec.writable_profiles()
+        item in spec.generator_config.manual_profiles
+        for item in spec.writable_profiles()
     )
     assert check is False
 
@@ -24,7 +25,7 @@ def test_as_module_name(spec: FHIRSpec):
     module_name = spec.as_module_name("VerificationResult")
     assert module_name == "verificationresult"
 
-    spec.settings.resource_modules_lowercase = False
+    spec.generator_config.naming_rules.resource_modules_lowercase = False
 
     module_name = spec.as_module_name("VerificationResult")
     assert module_name == "VerificationResult"
@@ -34,11 +35,11 @@ def test_as_class_name(spec: FHIRSpec):
     class_name = spec.as_class_name("role", "Practitioner")
     assert class_name == "PractRole"
 
-    spec.settings.camelcase_classes = True
+    spec.generator_config.naming_rules.camelcase_classes = True
     class_name = spec.as_class_name("nonexistent")
     assert class_name == "Nonexistent"
 
-    spec.settings.camelcase_classes = False
+    spec.generator_config.naming_rules.camelcase_classes = False
     class_name = spec.as_class_name("nonexistent")
     assert class_name == "nonexistent"
 
@@ -57,7 +58,7 @@ def test_class_name_for_profile(spec: FHIRSpec):
 
 
 def test_safe_enum_name(spec: FHIRSpec):
-    spec.settings.camelcase_enums = True
+    spec.generator_config.naming_rules.camelcase_enums = True
     assert spec.safe_enum_name("foo_bar", ucfirst=True) == "FooBar"
     assert spec.safe_enum_name("foo_bar", ucfirst=False) == "fooBar"
     assert spec.safe_enum_name("HTTP", ucfirst=True) == "HTTP"
@@ -75,7 +76,7 @@ def test_safe_enum_name(spec: FHIRSpec):
         spec.safe_enum_name("HTTPVerb") == "hTTPVerb"  # <- is this a desired behavior
     )
 
-    spec.settings.camelcase_enums = False
+    spec.generator_config.naming_rules.camelcase_enums = False
     assert spec.safe_enum_name("foo_bar", ucfirst=True) == "foo_bar"
     assert spec.safe_enum_name("foo_bar", ucfirst=False) == "foo_bar"
     assert spec.safe_enum_name("HTTP", ucfirst=True) == "HTTP"
