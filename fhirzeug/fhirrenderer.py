@@ -24,7 +24,8 @@ class FHIRRenderer:
         self.jinjaenv = Environment(
             loader=PackageLoader(
                 self.generator_config.module, self.generator_config.template.source,
-            )
+            ),
+            extensions=["jinja2.ext.do"],  # Allow the "do" statement in Jinja
         )
         self.jinjaenv.filters["wordwrap"] = do_wordwrap
         self.jinjaenv.filters["snake_case"] = snakecase

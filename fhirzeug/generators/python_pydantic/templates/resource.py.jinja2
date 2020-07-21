@@ -23,7 +23,9 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
 {% set enums = [] %}
 {% for prop in clazz.properties %}
     {%- if prop.enum %}
-        {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
+        {%- if prop.enum.is_codesystem_known %}
+            {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
+        {%- endif %}
     {% endif %}
     {%- set type_name = prop.desired_classname %}
     {%- if not prop.is_native %}
@@ -36,6 +38,15 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
             {%- set type_name = "typing.List[{}]".format(type_name) %}
         {%- endif %}
     {%- endif %}
+    {%- if prop.enum %}
+        {%- if not prop.enum.is_codesystem_known and prop.enum.restricted_to %}
+            {%- set tmp_list = [] %}
+            {%- for code in prop.enum.restricted_to %}
+                {% do tmp_list.append('"' + code + '"') %}
+            {%- endfor %}
+            {%- set type_name = 'typing.Literal[{}]'.format(tmp_list |join(", ")) %}
+        {%- endif %}
+    {% endif %}
     {%- if prop.is_optional or prop.choice_of_type %}{# one of many https://www.hl7.org/fhir/formats.html#choice #}
         {%- set type_name = "typing.Optional[{}]".format(type_name) %}
     {%- endif %}
