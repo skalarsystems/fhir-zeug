@@ -6,7 +6,9 @@ All profiles are in one file.
 
 # FHIR Specific JSON Representation
 
-Generally this generated code tries to stick as close as possible to the [FHIR JSON spec](https://www.hl7.org/fhir/json.htm). Another important is the [FHIR Datatypes spec](https://www.hl7.org/fhir/datatypes.html).
+Generally this generated code tries to stick as close as possible to the
+[FHIR JSON spec](https://www.hl7.org/fhir/json.htm). Another important is the
+[FHIR Datatypes spec](https://www.hl7.org/fhir/datatypes.html).
 
 ## Empty Strings
 
@@ -15,7 +17,8 @@ Generally this generated code tries to stick as close as possible to the [FHIR J
 
 Additionally whitespaces are stripped:
 
-> Note: This means that a string that consists only of whitespace could be trimmed to nothing, which > would be treated as an invalid element value. Therefore strings SHOULD always contain
+> Note: This means that a string that consists only of whitespace could be trimmed to nothing, which
+> would be treated as an invalid element value. Therefore strings SHOULD always contain
 > non-whitespace content. - https://www.hl7.org/fhir/datatypes.html#primitive
 
 That means empty strings are interpreted as `null` values.
@@ -29,7 +32,9 @@ threaded as a `null` value. Which then is not set at all.
 
 ## `null` Values
 
-> Just as in XML, JSON objects and arrays are never empty, and properties never have null values (except for a special case documented below). Omit a property if it is empty - https://www.hl7.org/fhir/json.html#xml
+> Just as in XML, JSON objects and arrays are never empty, and properties never have null values
+> (except for a special case documented below). Omit a property if it is empty -
+> https://www.hl7.org/fhir/json.html#xml
 
 That means specifically that if a property contains a null value it is like it never has been set.
 
@@ -40,3 +45,7 @@ Example:
 >>> Patient(name=None).dict()
 {}
 ```
+
+## ValueSets and CodeSystems
+
+`ValueSets` are represented by enums and `CodeSystems` are validated by `typing.Literals`.
