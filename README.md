@@ -48,7 +48,7 @@ FHIR Specification provides different ways to define a ValueSet. At the moment, 
 
 - If a ValueSet is based on a single CodeSystem and this CodeSystem is defined in FHIR, then a `DocEnum` object is generated to validate this ValueSet.  
   **Example :** ValueSet https://www.hl7.org/fhir/valueset-account-status.html is based on CodeSystem https://www.hl7.org/fhir/codesystem-account-status.html .
-- If a ValueSet is based on a single CodeSystem but this CodeSystem is not included in the FHIR specification, FHIRzeug do not implement it as an Enum. If FHIR provides an exhaustive list of possible values (e.g. : under `spec["compose"]["include"][0]["concept"]`).
+- If a ValueSet is based on a single CodeSystem but this CodeSystem is not included in the FHIR specification, FHIRzeug do not implement it as an Enum. If FHIR provides an exhaustive list of possible values (e.g. : under `spec["compose"]["include"][0]["concept"]`), ValueSet is validated by a `typing.Literal`.
   **Warning :** this is different from having access to the full CodeSystem. Especially, there is no documentation.  
   **Example :** ValueSet https://www.hl7.org/fhir/valueset-duration-units.html .
 - If a ValueSet is based on a single CodeSystem, this CodeSystem is not included in FHIR specification and the ValueSet is defined as a filter of the fields of the CodeSystem, no specific validation is implemented.  

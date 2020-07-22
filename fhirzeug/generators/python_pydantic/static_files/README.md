@@ -48,4 +48,7 @@ Example:
 
 ## ValueSets and CodeSystems
 
-`ValueSets` are represented by enums and `CodeSystems` are validated by `typing.Literals`.
+FHIR Specification provides different ways to define a `ValueSet`. The implementation varies depending on the use case :
+- If a ValueSet is based on a single CodeSystem and this CodeSystem is defined in FHIR, then the ValueSet is validated by an `enum`.
+- If a ValueSet is based on a single CodeSystem, that this CodeSystem is not included in the FHIR specification, but FHIR provides an exhaustive list of possible values, then the ValueSet is validated by a `typing.Literal`.
+- Otherwise, the field is validated by a very permissive regex `[^\s]+(\s[^\s]+)*`.
