@@ -92,7 +92,7 @@ class FHIRAbstractBase(pydantic.BaseModel):
 
     def dict(self, *args, **kwargs):
         serialized = super().dict(*args, **kwargs)
-        return _without_empty_items(serialized)
+        return _without_empty_items(serialized) or {}
 
     @pydantic.root_validator(pre=True)
     def strip_empty_items(cls, valuse):
