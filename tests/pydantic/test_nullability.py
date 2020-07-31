@@ -35,8 +35,8 @@ class RootModel(FHIRAbstractBase):
     list_items: typing.Optional[typing.List["ListItem"]]
 
 
-def test_returns_none_if_no_fields():
-    assert RootModel().dict() is None
+def test_returns_empty_dict_if_no_fields():
+    assert RootModel().dict() == {}
 
 
 def test_not_set_fields_are_ignored():
