@@ -1,8 +1,5 @@
 import typing
 
-import pydantic
-import pytest
-
 from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import FHIRString
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,

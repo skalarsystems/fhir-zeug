@@ -45,7 +45,7 @@ def test_generated_enums() -> None:
 
 def test_empty_list_serialization() -> None:
     """An empty coding must be ignored during serialization.
-    
+
     - Expected behavior : "tag" = []
     - Previous behavior : "tag" = [None]
     """
