@@ -50,4 +50,3 @@ def test_empty_list_serialization() -> None:
     - Previous behavior : "tag" = [None]
     """
     assert r4.Meta(tag=[r4.Coding()]) == {"tag": []}
-
