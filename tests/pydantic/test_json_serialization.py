@@ -5,6 +5,7 @@ import pytest
 
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
+    _without_empty_items,
 )
 
 
@@ -34,3 +35,17 @@ def test_decimal_serialization(input, expected):
 
     if input:
         assert str(ExampleModel.parse_raw(serialized).decimal) == str(input)
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        ([], None),
+        ([None], None),
+        ({"empty": None}, None),
+        ([{"empty": None}], None),
+        ([{"empty": [], "example": "example"}], [{"example": "example"}]),
+    ],
+)
+def test_without_empty_items(input: typing.Any, expected: typing.Any):
+    assert _without_empty_items(input) == expected

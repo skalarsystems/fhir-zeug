@@ -129,7 +129,8 @@ def _without_empty_items(obj: typing.Any):
         return obj
 
     if isinstance(obj, (list, tuple)):
-        cleaned_list = [_without_empty_items(item) for item in obj]
+        cleaned_list_with_none = [_without_empty_items(item) for item in obj]
+        cleaned_list = [item for item in cleaned_list_with_none if item is not None]
         if cleaned_list:
             return cleaned_list
         return None

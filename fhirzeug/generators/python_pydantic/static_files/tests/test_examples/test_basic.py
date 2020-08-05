@@ -41,3 +41,12 @@ def test_generated_enums() -> None:
     with pytest.raises(pydantic.ValidationError):
         # DurationUnit is a typing.Literal field.
         repeat = r4.TimingRepeat(duration_unit="not_a_predefined_unit")  # noqa : F841
+
+
+def test_empty_list_serialization() -> None:
+    """An empty coding must be ignored during serialization.
+
+    - Expected behavior : {}
+    - Previous behavior : {"tag" = [None]}
+    """
+    assert r4.Meta(tag=[r4.Coding()]).dict() == {}
