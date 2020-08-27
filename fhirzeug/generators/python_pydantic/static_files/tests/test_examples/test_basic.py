@@ -50,3 +50,9 @@ def test_empty_list_serialization() -> None:
     - Previous behavior : {"tag" = [None]}
     """
     assert r4.Meta(tag=[r4.Coding()]).dict() == {}
+
+
+def test_unknown_fields_are_not_allowed() -> None:
+    """An error must be thrown if there is an unknown argument provided."""
+    with pytest.raises(pydantic.ValidationError):
+        r4.Meta(unknown_field=True)
