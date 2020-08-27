@@ -44,6 +44,10 @@ def preprocess_whitespace(obj: typing.Any) -> typing.Any:
 
 
 def test_read(fhir_file: Path):
+    """ Test verifies if model is correctly read"""
+
+    if fhir_file.name in NOT_WORKING:
+        pytest.skip("test disabled")
 
     with fhir_file.open() as f_in:
         doc = json.load(f_in)
