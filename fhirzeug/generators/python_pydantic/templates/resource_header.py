@@ -102,6 +102,7 @@ class FHIRAbstractBase(pydantic.BaseModel):
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
+        extra = "forbid"
         json_dumps = json_dumps
         json_loads = json_loads
 
