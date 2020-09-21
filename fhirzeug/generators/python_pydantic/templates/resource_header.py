@@ -148,6 +148,10 @@ class FHIRAbstractBase(pydantic.BaseModel):
         Internally, each FHIR class stores a list of dynamic validators. Then,
         `dynamic_post_root_validator` iterates over validators one by one using the
         __mro__ resolution order.
+
+        Warning: there is currently no way of removing a validator. Since this
+        method is more or less doing monkeypatching, it is preferred to use it
+        carefully.
         """
         dynamic_validators_field = cls._get_dynamic_validators_field_name()
         dynamic_validators = getattr(cls, dynamic_validators_field, [])
