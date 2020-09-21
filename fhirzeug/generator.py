@@ -35,6 +35,9 @@ def generate(spec: FHIRSpec):
         dest_filepath = output_directory / generator_config.output_file.destination
         with dest_filepath.open("w") as f_out:
             header_filepath = generator_path / "templates/resource_header.py"
+            custom_validators_filepath = (
+                generator_path / "templates/resource_custom_validators.py"
+            )
             footer_filepath = generator_path / "templates/resource_footer.py"
 
             # Copy Header
@@ -46,6 +49,10 @@ def generate(spec: FHIRSpec):
 
             # Render Resources
             fhirrenderer.FHIRStructureDefinitionRenderer(spec).render(f_out)
+
+            # Copy custom validators
+            with custom_validators_filepath.open("r") as f_in:
+                shutil.copyfileobj(f_in, f_out)
 
             # Copy Footer
             with footer_filepath.open("r") as f_in:

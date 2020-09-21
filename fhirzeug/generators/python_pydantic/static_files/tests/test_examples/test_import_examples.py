@@ -17,6 +17,7 @@ NOT_WORKING = {
     "relatedperson-example.json",  # _name
     "patient-example.json",  # _name
     "activitydefinition-predecessor-example.json",  # _event
+    "diagnosticreport-hla-genetics-results-example.json",  # invalid reference field
 }
 
 # Some .json files require preprocessing because they have whitespace at the end
