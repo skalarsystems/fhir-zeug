@@ -1,6 +1,4 @@
 """Test FHIRAbstractBase object."""
-import typing
-
 import pydantic
 import pytest
 from pydantic import ValidationError
