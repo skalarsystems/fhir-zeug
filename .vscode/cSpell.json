@@ -9,7 +9,9 @@
         "fhirloader",
         "fhirspec",
         "fhirzeug",
+        "noqa",
         "pydantic",
+        "pytest",
         "Skalar",
         "typer",
         "zeug"

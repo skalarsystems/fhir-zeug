@@ -1,3 +1,8 @@
+# Dynamically add validators to Resources.
+# Dynamic validators are defined in "resource_custom_validators.py".
+Reference._add_post_root_validator(_reference_validator)
+
+
 def inheritors(klass):
     subclasses = set()
     work = [klass]
