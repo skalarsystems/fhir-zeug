@@ -49,4 +49,14 @@ def from_raw(*args, **kwargs):
 
     The resources will be instanciated based on their resourceType property."""
 
-    return from_dict(json_loads(*args, **kwargs))
+    try:
+        # Raise a ValueError if duplicated keys in raw JSON.
+        dict_ = json_loads(*args, **kwargs)
+    except ValueError as e:
+        # ValueError is converted to a pydantic ValidationError.
+        raise pydantic.ValidationError(
+            model=FHIRAbstractResource,
+            errors=[pydantic.error_wrappers.ErrorWrapper(exc=e, loc="JSON decoding")],
+        )
+
+    return from_dict(dict_)

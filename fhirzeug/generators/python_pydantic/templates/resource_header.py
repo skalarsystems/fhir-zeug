@@ -73,12 +73,36 @@ class DecimalEncoder(json.JSONEncoder):
         return super().encode(obj)
 
 
+def check_for_duplicate_keys(
+    ordered_pairs: typing.List[typing.Tuple[typing.Hashable, typing.Any]]
+) -> typing.Dict:
+    """Check for duplicated keys.
+
+    Raise ValueError if a duplicate key exists in provided ordered
+    list of pairs, otherwise return a dict.
+
+    Taken from https://stackoverflow.com/a/49518779/2750114 .
+    """
+    dict_out: typing.Dict = {}
+    for key, val in ordered_pairs:
+        if key in dict_out:
+            raise ValueError(f"Duplicate key: {key}")
+        else:
+            dict_out[key] = val
+    return dict_out
+
+
 def json_dumps(*args, **kwargs):
     return json.dumps(*args, **kwargs, cls=DecimalEncoder)
 
 
 def json_loads(*args, **kwargs):
-    return json.loads(*args, **kwargs, parse_float=decimal.Decimal)
+    return json.loads(
+        *args,
+        **kwargs,
+        parse_float=decimal.Decimal,
+        object_pairs_hook=check_for_duplicate_keys,
+    )
 
 
 class FHIRAbstractBase(pydantic.BaseModel):

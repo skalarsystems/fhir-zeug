@@ -6,6 +6,7 @@ import pytest
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
     _without_empty_items,
+    json_loads,
 )
 
 
@@ -49,3 +50,10 @@ def test_decimal_serialization(input, expected):
 )
 def test_without_empty_items(input: typing.Any, expected: typing.Any):
     assert _without_empty_items(input) == expected
+
+
+def test_duplicate_entries():
+    """Test duplicate entry raise ValueError."""
+    json_loads('{"x": 1}')
+    with pytest.raises(ValueError):
+        json_loads('{"x": 1, "x": 2}')
