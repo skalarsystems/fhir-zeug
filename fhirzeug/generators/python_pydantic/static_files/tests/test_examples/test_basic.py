@@ -56,3 +56,22 @@ def test_unknown_fields_are_not_allowed() -> None:
     """An error must be thrown if there is an unknown argument provided."""
     with pytest.raises(pydantic.ValidationError):
         r4.Meta(unknown_field=True)
+
+
+def test_list_instead_of_dict() -> None:
+    """An error must be thrown if a list is provided instead of a dict."""
+    dict_ = {
+        "resourceType": "Observation",
+        "status": "final",
+        "code": {"coding": [{"system": "test", "code": "test"}]},
+        "subject": {"reference": "a reference", "display": "REF",},  # Dictionary -> OK
+    }
+    subject = {  # Dictionary -> OK
+        "reference": "a reference",
+        "display": "REF",
+    }
+    dict_["subject"] = subject
+    r4.from_dict(dict_)
+    with pytest.raises(pydantic.ValidationError):
+        dict_["subject"] = [subject]  # As a list -> not expected
+        r4.from_dict(dict_)
