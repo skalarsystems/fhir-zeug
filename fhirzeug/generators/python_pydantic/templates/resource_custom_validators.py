@@ -1,25 +1,45 @@
 # Define custom root validators.
 # Validators are added to the already defined Resources in resource_footer.py .
-# By doing so, this python file remains importable for tests.
 
 import re  # noqa: F811
 import typing
 import pydantic
 
-_FHIR_API_REGEX = re.compile(
-    # Taken from https://www.hl7.org/fhir/references.html#literal
-    r"\A"
-    # From https://www.hl7.org/fhir/http.html#root : "The protocols http: and https:
-    # SHALL NOT be used to refer to different underlying objects" -> we do not take it
-    # in base_url group.
-    r"((http|https):\/\/(?P<base_url>([A-Za-z0-9\-\\\.\:\%\$]*\/)+))?"
-    r"(?P<resource_type>("
-    r"Account|ActivityDefinition|AdverseEvent|AllergyIntolerance|Appointment|AppointmentResponse|AuditEvent|Basic|Binary|BiologicallyDerivedProduct|BodyStructure|Bundle|CapabilityStatement|CarePlan|CareTeam|CatalogEntry|ChargeItem|ChargeItemDefinition|Claim|ClaimResponse|ClinicalImpression|CodeSystem|Communication|CommunicationRequest|CompartmentDefinition|Composition|ConceptMap|Condition|Consent|Contract|Coverage|CoverageEligibilityRequest|CoverageEligibilityResponse|DetectedIssue|Device|DeviceDefinition|DeviceMetric|DeviceRequest|DeviceUseStatement|DiagnosticReport|DocumentManifest|DocumentReference|EffectEvidenceSynthesis|Encounter|Endpoint|EnrollmentRequest|EnrollmentResponse|EpisodeOfCare|EventDefinition|Evidence|EvidenceVariable|ExampleScenario|ExplanationOfBenefit|FamilyMemberHistory|Flag|Goal|GraphDefinition|Group|GuidanceResponse|HealthcareService|ImagingStudy|Immunization|ImmunizationEvaluation|ImmunizationRecommendation|ImplementationGuide|InsurancePlan|Invoice|Library|Linkage|List|Location|Measure|MeasureReport|Media|Medication|MedicationAdministration|MedicationDispense|MedicationKnowledge|MedicationRequest|MedicationStatement|MedicinalProduct|MedicinalProductAuthorization|MedicinalProductContraindication|MedicinalProductIndication|MedicinalProductIngredient|MedicinalProductInteraction|MedicinalProductManufactured|MedicinalProductPackaged|MedicinalProductPharmaceutical|MedicinalProductUndesirableEffect|MessageDefinition|MessageHeader|MolecularSequence|NamingSystem|NutritionOrder|Observation|ObservationDefinition|OperationDefinition|OperationOutcome|Organization|OrganizationAffiliation|Patient|PaymentNotice|PaymentReconciliation|Person|PlanDefinition|Practitioner|PractitionerRole|Procedure|Provenance|Questionnaire|QuestionnaireResponse|RelatedPerson|RequestGroup|ResearchDefinition|ResearchElementDefinition|ResearchStudy|ResearchSubject|RiskAssessment|RiskEvidenceSynthesis|Schedule|SearchParameter|ServiceRequest|Slot|Specimen|SpecimenDefinition|StructureDefinition|StructureMap|Subscription|Substance|SubstanceNucleicAcid|SubstancePolymer|SubstanceProtein|SubstanceReferenceInformation|SubstanceSourceMaterial|SubstanceSpecification|SupplyDelivery|SupplyRequest|Task|TerminologyCapabilities|TestReport|TestScript|ValueSet|VerificationResult|VisionPrescription"  # noqa E501
-    r"))\/"
-    r"(?P<resource_id>[A-Za-z0-9\-\.]{1,64})"
-    r"(\/_history\/(?P<version>[A-Za-z0-9\-\.]{1,64}))?"
-    r"\Z"
-)
+
+def _build_fhir_api_regex() -> re.Pattern:
+
+    _all_resources_names = set()
+
+    def _add_subresources(_resource: typing.Type[Resource]) -> None:
+        _subresources = _resource.__subclasses__()
+        if len(_subresources) == 0:
+            _all_resources_names.add(_resource.__name__)
+        else:
+            for _subresource in _subresources:
+                _add_subresources(_subresource)
+
+    _add_subresources(Resource)
+    _resources_to_ignore = {"MetadataResource", "Parameters"}
+    for _resource_name in _resources_to_ignore:
+        _all_resources_names.remove(_resource_name)
+
+    resources_pattern = "|".join(sorted(_all_resources_names))
+
+    return re.compile(
+        # Taken from https://www.hl7.org/fhir/references.html#literal
+        r"\A"
+        # From https://www.hl7.org/fhir/http.html#root : "The protocols http: and https:
+        # SHALL NOT be used to refer to different underlying objects" -> we do not take it
+        # in base_url group.
+        r"((http|https):\/\/(?P<base_url>([A-Za-z0-9\-\\\.\:\%\$]*\/)+))?"
+        r"(?P<resource_type>(" + resources_pattern + r"))\/"
+        r"(?P<resource_id>[A-Za-z0-9\-\.]{1,64})"
+        r"(\/_history\/(?P<version>[A-Za-z0-9\-\.]{1,64}))?"
+        r"\Z"
+    )
+
+
+_FHIR_API_REGEX = _build_fhir_api_regex()
 
 
 class _ParsedLiteralReference(pydantic.BaseModel):

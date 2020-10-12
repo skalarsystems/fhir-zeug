@@ -1,6 +1,7 @@
 """Test Reference element."""
 import pytest
 import pydantic
+import typing
 
 from pydantic_fhir import r4
 
@@ -34,3 +35,28 @@ def test_absolute_reference_not_url() -> None:
 
     with pytest.raises(pydantic.ValidationError):
         r4.Reference(reference="foobar/23")  # foobar is not a resource type
+
+
+@pytest.mark.parametrize(
+    ("values", "is_valid"),
+    [
+        ({"reference": "Patient/23", "type": "Patient"}, True),
+        ({"reference": "Patient/23", "type": "Device"}, False),
+        ({"reference": "http://fhir.example.org/Patient/23", "type": "Patient"}, True),
+        ({"reference": "http://fhir.example.org/Patient/23", "type": "Device"}, False),
+        ({"reference": "http://fhir.example.org/Patient/23"}, True),
+        ({"reference": "https://example.org/foobar"}, True),
+        ({"reference": "ftp://ftp-server.com/foobar/example-0.1"}, True),
+        ({"reference": "Patient"}, False),
+        ({"reference": "foobar/23"}, False),
+        ({"reference": "#foobar"}, True),  # Internal fragment reference
+        ({"reference": "#foobar/23"}, True),  # Internal fragment reference
+    ],
+)
+def test_reference_validator(values: typing.Dict, is_valid: bool) -> None:
+    """Test reference custom validator."""
+    if is_valid:
+        r4._reference_validator(values)
+    else:
+        with pytest.raises(ValueError):
+            r4._reference_validator(values)
