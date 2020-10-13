@@ -123,6 +123,22 @@ class FHIRAbstractBase(pydantic.BaseModel):
         """This strips all empty elements according to the fhir spec."""
         return _without_empty_items(valuse) or {}
 
+    @pydantic.root_validator(pre=True)
+    def validate_list_not_allowed_for_singleton_fields(cls, values):
+        """Ensure that Singleton fields cannot receive a List as input.
+
+        See issue on GitHub : https://github.com/skalarsystems/fhirzeug/issues/59
+        """
+        for cls_field in cls.__fields__.values():
+            if cls_field.shape == pydantic.fields.SHAPE_SINGLETON:
+                for field_name in [cls_field.alias, cls_field.name]:
+                    if field_name in values:
+                        if isinstance(values[field_name], list):
+                            raise ValueError(
+                                f"List is not suitable for a Singleton field : {field_name}."
+                            )
+        return values
+
     class Config:
         alias_generator = camelcase_alias_generator
         allow_population_by_field_name = True
