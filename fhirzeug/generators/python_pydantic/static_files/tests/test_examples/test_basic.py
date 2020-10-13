@@ -59,7 +59,10 @@ def test_unknown_fields_are_not_allowed() -> None:
 
 
 def test_list_instead_of_dict() -> None:
-    """An error must be thrown if a list is provided instead of a dict."""
+    """An error must be thrown if a list is provided instead of a dict.
+
+    See : https://github.com/skalarsystems/fhirzeug/issues/59
+    """
     dict_ = {
         "resourceType": "Observation",
         "status": "final",

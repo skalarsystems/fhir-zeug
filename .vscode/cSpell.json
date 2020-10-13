@@ -10,6 +10,7 @@
         "fhirspec",
         "fhirzeug",
         "pydantic",
+        "pytest",
         "Skalar",
         "typer",
         "zeug"
