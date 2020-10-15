@@ -169,6 +169,10 @@ class FHIRAbstractBase(pydantic.BaseModel):
                 subclass_validators = getattr(subclass, subclass_field, None)
                 if subclass_validators is not None:
                     yield from subclass_validators
+            else:
+                # If here, it means we are already in the parents' classes of FHIRAbstractBase
+                # We do not need to continue to iterate
+                return
 
     @classmethod
     def _get_dynamic_validators_field_name(cls) -> str:
