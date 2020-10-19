@@ -30,4 +30,4 @@ def test_list_instead_of_dict_must_fail():
     ContainerModel(field_c={"field_a": "123", "field_b": "456"})
 
     with pytest.raises(ValidationError):
-        ContainerModel(fieldC=[{"field_a": "123", "field_b": "456"}])
+        ContainerModel(field_c=[{"field_a": "123", "field_b": "456"}])

@@ -76,10 +76,9 @@ def test_list_instead_of_dict() -> None:
         "resourceType": "Observation",
         "status": "final",
         "code": {"coding": [{"system": "test", "code": "test"}]},
-        "subject": {"reference": "a reference", "display": "REF",},  # Dictionary -> OK
     }
     subject = {  # Dictionary -> OK
-        "reference": "a reference",
+        "reference": "Patient/475",
         "display": "REF",
     }
     dict_["subject"] = subject

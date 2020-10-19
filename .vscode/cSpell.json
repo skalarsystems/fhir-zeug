@@ -9,6 +9,7 @@
         "fhirloader",
         "fhirspec",
         "fhirzeug",
+        "noqa",
         "pydantic",
         "pytest",
         "Skalar",
