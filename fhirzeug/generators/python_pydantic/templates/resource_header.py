@@ -119,9 +119,70 @@ class FHIRAbstractBase(pydantic.BaseModel):
         return _without_empty_items(serialized) or {}
 
     @pydantic.root_validator(pre=True)
-    def strip_empty_items(cls, valuse):
+    def strip_empty_items(cls, values: typing.Dict) -> typing.Dict:
         """This strips all empty elements according to the fhir spec."""
-        return _without_empty_items(valuse) or {}
+        return _without_empty_items(values) or {}
+
+    @pydantic.root_validator()
+    def dynamic_post_root_validator(cls, values: typing.Dict) -> typing.Dict:
+        """Validate data.
+
+        The behavior of this validator can be changed after definition of the BaseModel
+        by using method `_add_post_root_validator`.
+        """
+        for validator in cls._dynamic_validators():
+            values = validator(values)
+        return values
+
+    @classmethod
+    def _add_post_root_validator(
+        cls, validator: typing.Callable[[typing.Dict], typing.Dict]
+    ) -> None:
+        """Add a post root validator to the FHIR object.
+
+        The order of the dynamic validators has not been a priority in this
+        implementation. All dynamic validators must be considered to be independent
+        from each other.
+        TODO : add more flexibility to order validators.
+
+        Internally, each FHIR class stores a list of dynamic validators. Then,
+        `dynamic_post_root_validator` iterates over validators one by one using the
+        __mro__ resolution order.
+
+        Warning: there is currently no way of removing a validator. Since this
+        method is more or less doing monkeypatching, it is preferred to use it
+        carefully.
+        """
+        dynamic_validators_field = cls._get_dynamic_validators_field_name()
+        dynamic_validators = getattr(cls, dynamic_validators_field, [])
+        dynamic_validators.append(validator)
+        setattr(cls, dynamic_validators_field, dynamic_validators)
+
+    @classmethod
+    def _dynamic_validators(
+        cls,
+    ) -> typing.Generator[typing.Callable[[typing.Dict], typing.Dict], None, None]:
+        """Return a generator iterating over dynamic validators."""
+        for subclass in cls.__mro__:
+            if issubclass(subclass, FHIRAbstractBase):
+                subclass_field = subclass._get_dynamic_validators_field_name()
+                subclass_validators = getattr(subclass, subclass_field, None)
+                if subclass_validators is not None:
+                    yield from subclass_validators
+            else:
+                # If here, it means we are already in the parents' classes of FHIRAbstractBase
+                # We do not need to continue to iterate
+                return
+
+    @classmethod
+    def _get_dynamic_validators_field_name(cls) -> str:
+        """Return a field "unique" to this class to store dynamic validators.
+
+        Unicity is guaranted unless two FHIR classes has the same name and one is
+        the child of the other one. 
+        TODO : ensure unicity of this field name in every cases.
+        """
+        return f"_dynamic_validators__{cls.__name__}"
 
     class Config:
         alias_generator = camelcase_alias_generator
