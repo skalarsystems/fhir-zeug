@@ -108,3 +108,24 @@ def _reference_validator(values):
                     "Reference must be an absolute URL or an URL relative to a FHIR RESTful server"
                 )
     return values
+
+
+def _extension_element_validator(values):
+    """Validate extension element values.
+
+    From https://www.hl7.org/fhir/extensibility.html#Extension :
+    "An extension SHALL have either a value (i.e. a value[x] element)
+    or sub-extensions, but not both. If present, the value[x] element
+    SHALL have content (value attribute or other elements)."
+    """
+    err_msg = "An extension SHALL have either a value or sub-extensions, but not both."
+    if values.get("extension") is not None:
+        for key, value in values.items():
+            if key.startswith("value_"):
+                assert value is None, err_msg
+    return values
+
+
+# Dynamically add validators to Resources.
+Reference._add_post_root_validator(_reference_validator)
+Extension._add_post_root_validator(_extension_element_validator)
