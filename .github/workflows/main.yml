@@ -34,9 +34,14 @@ jobs:
         id: cache
         with:
           path: .venv
-          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          # The `2` suffix is used because there is no way to clear the cache
+          # manually, and we needed it to fix the pipeline. The cache is evicted
+          # automatically if not used for 7 days, so we'll be able to get rid
+          # of this suffix in the future.
+          # https://docs.github.com/en/free-pro-team@latest/actions/guides/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy
+          key: poetry2-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            poetry-${{ hashFiles('**/poetry.lock') }}
+            poetry2-${{ hashFiles('**/poetry.lock') }}
 
       - name: Set Poetry config
         run: |

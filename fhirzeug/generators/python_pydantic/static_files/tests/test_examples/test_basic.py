@@ -56,3 +56,12 @@ def test_unknown_fields_are_not_allowed() -> None:
     """An error must be thrown if there is an unknown argument provided."""
     with pytest.raises(pydantic.ValidationError):
         r4.Meta(unknown_field=True)
+
+
+def test_duplicated_entries() -> None:
+    """An error must be thrown if there are duplicated key in JSON."""
+    r4.from_raw('{"resourceType":"DomainResource"}')
+    with pytest.raises(pydantic.ValidationError):
+        r4.from_raw(
+            '{"resourceType":"DomainResource", "resourceType":"DomainResource"}'
+        )
