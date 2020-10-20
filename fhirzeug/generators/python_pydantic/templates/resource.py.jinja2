@@ -20,6 +20,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
         List of `str` items. """
 
 
+{% set primitive_extensions = [] %}
 {% set enums = [] %}
 {% for prop in clazz.properties %}
     {%- if prop.enum %}
@@ -63,12 +64,14 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     """
 
     {%- if prop.is_json_primitive_field %}
+    {%- set extension_name = "{}__extension".format(prop.name | snake_case) -%}
+    {% do primitive_extensions.append(extension_name) %}
     {%- set type_name = "typing.Optional[\"PrimitiveExtension\"]" %}
     {%- if prop.is_array %}
         {%- set type_name = "typing.Optional[typing.List[{}]]".format(type_name) %}
     {%- endif %}
 
-    {{ prop.name | snake_case }}__extension: {{ type_name }}
+    {{ extension_name }}: {{ type_name }}
 
     """
     Extension of a JSON primitive element. 
@@ -76,6 +79,7 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     but an alias is used in order to be validated by Pydantic.
     See : https://www.hl7.org/fhir/json.html#primitive
     """
+
     {% endif %}
 
 {%- if prop.desired_classname == "Resource" %}
@@ -108,4 +112,10 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
                 a = {"value": item.value, "description": item.__doc__}
                 enums.append(a)
         {% endfor %}
+{% endif %}
+
+{%-if primitive_extensions %}
+    {%- for extension_name in primitive_extensions %}
+    _validate_{{ extension_name }} = pydantic.validator('{{ extension_name }}', allow_reuse=True)(primitive_extension_validator)
+    {% endfor %}
 {% endif %}

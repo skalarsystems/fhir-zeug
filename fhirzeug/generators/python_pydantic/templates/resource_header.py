@@ -24,6 +24,42 @@ def choice_of_validator(choices, optional):
     return check_at_least_one
 
 
+def primitive_extension_validator(cls, v, values, field):
+    """Validate the extension of a primitive field.
+
+    Validator needs `values` in order to validate the extension against
+    its primitive field value.
+
+    Note: `primitive_field_name` and `primitive_field_value` refer to the
+          primitive field that is extended and `field`/`v` refer to the
+          extension field.
+
+    Validators :
+        - from https://www.hl7.org/fhir/json.html#primitive :
+          "In the case where the primitive element may repeat, it is represented
+          in two arrays. JSON null values are used to fill out both arrays so
+          that the id and/or extension are aligned with the matching value in the
+          first array."
+          "Note: when one of the repeating elements has no value, it is represented
+          in the first array using a null. When an element has a value but no
+          extension/id, the second array will have a null at the position of that
+          element."
+
+        - TODO: validate cardinality ?
+    """
+    primitive_field_name = primitive_extension_alias_generator(field.name)[1:]
+    primitive_field_value = values.get(primitive_field_name)
+
+    if v is not None and isinstance(v, list):
+        if primitive_field_value is not None:
+            # Primitive value is a list -> should already be validated by pydantic
+            assert isinstance(primitive_field_value, list)
+
+            # Validate that both lists have same length
+            assert len(primitive_field_value) == len(v)
+    return v
+
+
 def camelcase_alias_generator(name: str) -> str:
     """Maps snakecase to camelcase.
 
