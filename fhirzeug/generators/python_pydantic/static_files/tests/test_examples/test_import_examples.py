@@ -8,15 +8,7 @@ import pytest
 
 from pydantic_fhir import r4
 
-# all are disabled because extensions are not implemented:
-# https://github.com/skalarsystems/fhirzeug/issues/13
 NOT_WORKING = {
-    "activitydefinition-example.json",  # _event
-    "activitydefinition-servicerequest-example.json",  # _event
-    "plandefinition-example.json",  # _event
-    "relatedperson-example.json",  # _name
-    "patient-example.json",  # _name
-    "activitydefinition-predecessor-example.json",  # _event
     "diagnosticreport-hla-genetics-results-example.json",  # invalid reference field
 }
 

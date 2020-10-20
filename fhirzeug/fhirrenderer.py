@@ -15,15 +15,15 @@ if TYPE_CHECKING:
 
 
 class FHIRRenderer:
-    """ Superclass for all renderer implementations.
-    """
+    """Superclass for all renderer implementations."""
 
     def __init__(self, spec: "FHIRSpec"):
         self.spec = spec
         self.generator_config = spec.generator_config
         self.jinjaenv = Environment(
             loader=PackageLoader(
-                self.generator_config.module, self.generator_config.template.source,
+                self.generator_config.module,
+                self.generator_config.template.source,
             ),
             extensions=["jinja2.ext.do"],  # Allow the "do" statement in Jinja
         )
@@ -31,8 +31,7 @@ class FHIRRenderer:
         self.jinjaenv.filters["snake_case"] = snakecase
 
     def render(self, f_out: Optional[TextIO] = None) -> None:
-        """ The main rendering start point, for subclasses to override.
-        """
+        """The main rendering start point, for subclasses to override."""
         raise Exception("Cannot use abstract superclass' `render` method")
 
     def do_render(
@@ -42,7 +41,7 @@ class FHIRRenderer:
         target_path: Optional[Path] = None,
         f_out: Optional[TextIO] = None,
     ) -> None:
-        """ Render the given data using a Jinja2 template, writing to the file
+        """Render the given data using a Jinja2 template, writing to the file
         at the target path.
 
         :param template_name: The Jinja2 template to render
@@ -74,12 +73,10 @@ class FHIRRenderer:
 
 
 class FHIRStructureDefinitionRenderer(FHIRRenderer):
-    """ Write classes for a profile/structure-definition.
-    """
+    """Write classes for a profile/structure-definition."""
 
     def copy_files(self, target_dir, f_out):
-        """ Copy base resources to the target location, according to config.
-        """
+        """Copy base resources to the target location, according to config."""
         for manual_profile in self.generator_config.manual_profiles:
             origpath = manual_profile.origpath
             if origpath and origpath.exists():
@@ -129,8 +126,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
 
 
 class FHIRValueSetRenderer(FHIRRenderer):
-    """ Write ValueSet and CodeSystem contained in the FHIR spec.
-    """
+    """Write ValueSet and CodeSystem contained in the FHIR spec."""
 
     def render(self, f_out):
         systems = [v for k, v in self.spec.codesystems.items()]

@@ -58,7 +58,25 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     """ {{ prop.short|wordwrap(67, wrapstring="\n        ") }}.
     {% if prop.is_array %}List of{% else %}Type{% endif %} `{{ prop.desired_classname }}`{% if prop.is_array %} items{% endif %}
     {%- if prop.reference_to_names|length > 0 %} referencing `{{ prop.reference_to_names|join(', ') }}`{% endif %}
-    {%- if prop.json_class != prop.desired_classname %} (represented as `{{ prop.json_class }}` in JSON){% endif %}. """
+    {%- if prop.json_class != prop.desired_classname %} (represented as `{{ prop.json_class }}` in JSON){% endif %}.
+    {%- if prop.is_json_primitive_field %} Is a JSON Primitive element.{% endif %}
+    """
+
+    {%- if prop.is_json_primitive_field %}
+    {%- set type_name = "typing.Optional[\"PrimitiveExtension\"]" %}
+    {%- if prop.is_array %}
+        {%- set type_name = "typing.Optional[typing.List[{}]]".format(type_name) %}
+    {%- endif %}
+
+    {{ prop.name | snake_case }}__extension: {{ type_name }}
+
+    """
+    Extension of a JSON primitive element. 
+    Property is represented in JSON as `_{{ prop.name | snake_case }}`
+    but an alias is used in order to be validated by Pydantic.
+    See : https://www.hl7.org/fhir/json.html#primitive
+    """
+    {% endif %}
 
 {%- if prop.desired_classname == "Resource" %}
     @pydantic.validator("{{ prop.name | snake_case }}", pre=True,  each_item=True)

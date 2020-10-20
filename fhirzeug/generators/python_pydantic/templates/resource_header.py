@@ -39,6 +39,24 @@ def camelcase_alias_generator(name: str) -> str:
     return stringcase.camelcase(name)
 
 
+def primitive_extension_alias_generator(name: str) -> str:
+    """Map pydantic name to JSON extension name (only primitive fields).
+
+    Add `_` prefix and remove `__extension` suffix.
+    """
+    extension_suffix = "__extension"
+    if name.endswith(extension_suffix):
+        return "_" + name[: -len(extension_suffix)]
+    return name
+
+
+def alias_generator(name: str) -> str:
+    """Map a field name to its alias."""
+    name = primitive_extension_alias_generator(name)
+    name = camelcase_alias_generator(name)
+    return name
+
+
 class DocEnum(enum.Enum):
     """Enum with docstrings support"""
 
@@ -106,8 +124,7 @@ def json_loads(*args, **kwargs):
 
 
 class FHIRAbstractBase(pydantic.BaseModel):
-    """Abstract base class for all FHIR elements.
-    """
+    """Abstract base class for all FHIR elements."""
 
     class Meta:
         profile: typing.List[str] = []
@@ -179,13 +196,13 @@ class FHIRAbstractBase(pydantic.BaseModel):
         """Return a field "unique" to this class to store dynamic validators.
 
         Unicity is guaranted unless two FHIR classes has the same name and one is
-        the child of the other one. 
+        the child of the other one.
         TODO : ensure unicity of this field name in every cases.
         """
         return f"_dynamic_validators__{cls.__name__}"
 
     class Config:
-        alias_generator = camelcase_alias_generator
+        alias_generator = alias_generator
         allow_population_by_field_name = True
         extra = "forbid"
         json_dumps = json_dumps
