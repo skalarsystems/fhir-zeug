@@ -121,8 +121,9 @@ def test_primitive_extension_basic_usage(primitive_extension: r4.PrimitiveExtens
     r4.Patient(gender="unknown", gender__extension=primitive_extension)
 
 
-def test_primitive_extension_list_usage(primitive_extension: r4.PrimitiveExtension):
-    """Test usage of a PrimitiveExtension."""
+def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtension,):
+    """Test usage of primitive list extension."""
+    # `given` field is Optional for HumanName
     r4.HumanName()
 
     # `given` is a `List` field

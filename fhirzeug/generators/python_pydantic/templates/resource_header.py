@@ -45,7 +45,7 @@ def primitive_extension_validator(cls, v, values, field):
           extension/id, the second array will have a null at the position of that
           element."
 
-        - TODO: validate cardinality ?
+        - TODO: validate cardinality ? Make optional initial field ?
     """
     primitive_field_name = primitive_extension_alias_generator(field.name)[1:]
     primitive_field_value = values.get(primitive_field_name)
@@ -56,12 +56,15 @@ def primitive_extension_validator(cls, v, values, field):
             assert isinstance(primitive_field_value, list)
 
             # Validate that both lists have same length
-            assert len(primitive_field_value) == len(v)
+            if len(primitive_field_value) != len(v):
+                raise ValueError(
+                    "When setting a primitive extension of a list, field list and field extension list must be both of same length."
+                )
     return v
 
 
 def camelcase_alias_generator(name: str) -> str:
-    """Maps snakecase to camelcase.
+    """Map snakecase to camelcase.
 
     This enables members to be created from camelCase. It takes the existing snakecase membername
     like foo_bar and converts it to its camelcase pendant fooBar.
@@ -69,7 +72,6 @@ def camelcase_alias_generator(name: str) -> str:
     Additionally it removes trailing _, since this is used to make membernames of reserved keywords
     usable, like `class`.
     """
-
     if name.endswith("_"):
         name = name[:-1]
     return stringcase.camelcase(name)
@@ -94,10 +96,10 @@ def alias_generator(name: str) -> str:
 
 
 class DocEnum(enum.Enum):
-    """Enum with docstrings support"""
+    """Enum with docstrings support."""
 
     def __new__(cls, value, doc=None):
-        """add docstring to the member of Enum if exists
+        """Add docstring to the member of Enum if exists.
 
         Args:
             value: Enum member value
