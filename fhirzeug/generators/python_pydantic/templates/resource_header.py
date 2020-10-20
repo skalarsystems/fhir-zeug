@@ -237,6 +237,26 @@ class FHIRAbstractBase(pydantic.BaseModel):
         """
         return f"_dynamic_validators__{cls.__name__}"
 
+    @pydantic.root_validator(pre=True)
+    def validate_list_not_allowed_for_singleton_fields(cls, values):
+        """Ensure that Singleton fields cannot receive a List as input.
+
+        See issue on GitHub : https://github.com/skalarsystems/fhirzeug/issues/59
+
+        This is also related to an issue on pydantic_repository :
+        https://github.com/samuelcolvin/pydantic/issues/1268 .
+        TODO: remove this validator once pydantic is updated to V2.
+        """
+        for cls_field in cls.__fields__.values():
+            if cls_field.shape == pydantic.fields.SHAPE_SINGLETON:
+                for field_name in [cls_field.alias, cls_field.name]:
+                    if field_name in values:
+                        if isinstance(values[field_name], list):
+                            raise ValueError(
+                                f"List is not suitable for a Singleton field : {field_name}."
+                            )
+        return values
+
     class Config:
         alias_generator = alias_generator
         allow_population_by_field_name = True

@@ -65,3 +65,24 @@ def test_duplicated_entries() -> None:
         r4.from_raw(
             '{"resourceType":"DomainResource", "resourceType":"DomainResource"}'
         )
+
+
+def test_list_instead_of_dict() -> None:
+    """An error must be thrown if a list is provided instead of a dict.
+
+    See : https://github.com/skalarsystems/fhirzeug/issues/59
+    """
+    dict_ = {
+        "resourceType": "Observation",
+        "status": "final",
+        "code": {"coding": [{"system": "test", "code": "test"}]},
+    }
+    subject = {  # Dictionary -> OK
+        "reference": "Patient/475",
+        "display": "REF",
+    }
+    dict_["subject"] = subject
+    r4.from_dict(dict_)
+    with pytest.raises(pydantic.ValidationError):
+        dict_["subject"] = [subject]  # As a list -> not expected
+        r4.from_dict(dict_)
