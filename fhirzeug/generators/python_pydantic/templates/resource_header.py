@@ -9,6 +9,9 @@ import json
 import pydantic
 
 
+_EXTENSION_SUFFIX = "__extension"
+
+
 def choice_of_validator(choices, optional):
     def check_at_least_one(cls, values):
 
@@ -60,6 +63,12 @@ def primitive_extension_validator(cls, v, values, field):
                 raise ValueError(
                     "When setting a primitive extension of a list, field list and field extension list must be both of same length."
                 )
+
+            for primitive_item, extension_item in zip(primitive_field_value, v):
+                if primitive_item is None and extension_item is None:
+                    raise ValueError(
+                        "When setting a primitive extension of a list, field item and primitive item cannot be `null` at the same position."
+                    )
     return v
 
 
@@ -82,9 +91,8 @@ def primitive_extension_alias_generator(name: str) -> str:
 
     Add `_` prefix and remove `__extension` suffix.
     """
-    extension_suffix = "__extension"
-    if name.endswith(extension_suffix):
-        return "_" + name[: -len(extension_suffix)]
+    if name.endswith(_EXTENSION_SUFFIX):
+        return "_" + name[: -len(_EXTENSION_SUFFIX)]
     return name
 
 
@@ -268,13 +276,47 @@ class FHIRAbstractBase(pydantic.BaseModel):
 
 
 def _without_empty_items(obj: typing.Any):
-    """
-    Clean empty items: https://www.hl7.org/fhir/datatypes.html#representations
+    """Clean empty items.
+
+    See : https://www.hl7.org/fhir/datatypes.html#representations
     TODO: add support for extensions: https://www.hl7.org/fhir/json.html#null
     """
     if isinstance(obj, Mapping):
         cleaned_dict = {}
         for key, value in obj.items():
+            primitive_key, extension_key = None, None
+            if key.startswith("_") and key[1:] in obj:
+                primitive_key = key[1:]
+                extension_key = key
+            elif ("_" + key) in obj:
+                primitive_key = key
+                extension_key = "_" + key
+            elif (
+                key.endswith(_EXTENSION_SUFFIX)
+                and key[: -len(_EXTENSION_SUFFIX)] in obj
+            ):
+                primitive_key = key[: -len(_EXTENSION_SUFFIX)]
+                extension_key = key
+            elif key + _EXTENSION_SUFFIX in obj:
+                primitive_key = key
+                extension_key = key + _EXTENSION_SUFFIX
+
+            if (primitive_key, extension_key) != (None, None):
+                primitive_value = obj[primitive_key]
+                extension_value = obj[extension_key]
+                if isinstance(primitive_value, list) and isinstance(
+                    extension_value, list
+                ):
+                    if primitive_key not in cleaned_dict:
+                        assert extension_key not in cleaned_dict
+                        cleaned_dict[primitive_key] = [
+                            _without_empty_items(value) for value in primitive_value
+                        ]
+                        cleaned_dict[extension_key] = [
+                            _without_empty_items(value) for value in extension_value
+                        ]
+                    continue
+
             cleaned_value = _without_empty_items(value)
             if cleaned_value is not None:
                 cleaned_dict[key] = cleaned_value
