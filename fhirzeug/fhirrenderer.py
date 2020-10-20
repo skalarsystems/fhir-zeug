@@ -22,8 +22,7 @@ class FHIRRenderer:
         self.generator_config = spec.generator_config
         self.jinjaenv = Environment(
             loader=PackageLoader(
-                self.generator_config.module,
-                self.generator_config.template.source,
+                self.generator_config.module, self.generator_config.template.source,
             ),
             extensions=["jinja2.ext.do"],  # Allow the "do" statement in Jinja
         )
