@@ -80,7 +80,7 @@ def test_read_write(fhir_file: Path):
 def test_primitive_extension_exists(fhir_file: Path):
     """Test each primitive field has the possibility of an extension.
 
-    If a field type is forgotten in the generator settings (under 
+    If a field type is forgotten in the generator settings (under
     mapping_rules > jsonmap), this test might be able to spot it.
     Note: if no example uses this field, then no errors will be raised.
     """
