@@ -123,10 +123,13 @@ mapping_rules:
     - FHIRDateTime
     - FHIRId
     - FHIRInstant
+    - FHIRInt
     - FHIROid
+    - FHIRPositiveInt
     - FHIRRequiredString
     - FHIRString
     - FHIRTime
+    - FHIRUnsignedInt
     - float
     - int
     - str
@@ -141,10 +144,13 @@ mapping_rules:
     FHIRDateTime: str
     FHIRId: str
     FHIRInstant: str
+    FHIRInt: str
     FHIROid: str
+    FHIRPositiveInt: int
     FHIRRequiredString: str
     FHIRString: str
     FHIRTime: str
+    FHIRUnsignedInt: str
     float: float
     int: int
     str: str

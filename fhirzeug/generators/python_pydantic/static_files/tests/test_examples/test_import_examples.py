@@ -1,5 +1,6 @@
 import re
 import json
+import _io
 import typing
 from pathlib import Path
 from collections import Counter
@@ -37,25 +38,16 @@ def preprocess_whitespace(obj: typing.Any) -> typing.Any:
 
 
 def test_read(fhir_file: Path):
-    """ Test verifies if model is correctly read"""
-
-    if fhir_file.name in NOT_WORKING:
-        pytest.skip("test disabled")
-
-    with fhir_file.open() as f_in:
+    """Test if model is correctly read."""
+    with _open_file(fhir_file) as f_in:
         doc = json.load(f_in)
 
     assert r4.from_dict(doc) is not None
 
 
 def test_read_write(fhir_file: Path):
-    """ This verifies if a written model equals to the read version"""
-
-    if fhir_file.name in NOT_WORKING:
-        pytest.skip("test disabled")
-
-    # load
-    with fhir_file.open() as f_in:
+    """Test if a written model equals to the read version."""
+    with _open_file(fhir_file) as f_in:
         json_in = f_in.read()
         doc = r4.json_loads(json_in)
 
@@ -85,6 +77,29 @@ def test_read_write(fhir_file: Path):
     assert counter_in == counter_out
 
 
+def test_primitive_extension_exists(fhir_file: Path):
+    """Test each primitive field has the possibility of an extension.
+
+    If a field type is forgotten in the generator settings (under 
+    mapping_rules > jsonmap), this test might be able to spot it.
+    Note: if no example uses this field, then no errors will be raised.
+    """
+    with _open_file(fhir_file) as f_in:
+        doc = json.load(f_in)
+
+    resource = r4.from_dict(doc)
+    for field, value in resource:
+        _check_field_extension_existence(resource, field, value)
+
+
+def _open_file(fhir_file: Path) -> _io.TextIOWrapper:
+    """Open FHIR file unless it has to be skipped."""
+    if fhir_file.name in NOT_WORKING:
+        pytest.skip("test disabled")
+
+    return fhir_file.open()
+
+
 def _normalize(s):
     """Normalize a json string to be comparable"""
     # Remove all whitespaces and newlines
@@ -94,3 +109,22 @@ def _normalize(s):
     for match in set(re.findall(r"(\\u[\d|a-f]{4})", s)):
         s = s.replace(match, eval(f"'{match}'"))
     return s
+
+
+def _check_field_extension_existence(
+    resource: r4.FHIRAbstractResource, field: str, value: typing.Any
+) -> None:
+    if value is not None:
+        if isinstance(value, list):
+            if len(value) == 0:
+                return
+            for v in value:
+                _check_field_extension_existence(resource, field, v)
+        else:
+            if isinstance(value, r4.FHIRAbstractBase):
+                for subfield, subvalue in value:
+                    _check_field_extension_existence(value, subfield, subvalue)
+            elif field != "resource_type":
+                # Means that field is a JSON primitive type
+                field_extension = f"{field}__extension"
+                assert hasattr(resource, field_extension)
