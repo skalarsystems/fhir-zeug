@@ -156,6 +156,7 @@ def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtensi
             given__extension=[primitive_extension, None, primitive_extension],
         )
 
+    # Not the same length because None values are not removed from list
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given=[None, NAME, None], given__extension=[primitive_extension])
 
@@ -164,6 +165,10 @@ def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtensi
     r4.HumanName(given=[NAME, NAME], given__extension=[primitive_extension, None])
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given=[NAME, None], given__extension=[primitive_extension, None])
+
+    # Both list cannot be empty at the same time
+    with pytest.raises(pydantic.ValidationError):
+        r4.HumanName(given=[], given__extension=[])
 
 
 def test_primitive_extension_as_dict():
@@ -198,6 +203,7 @@ def test_primitive_extension_as_dict():
     data = {
         "given": ["Queen Elisabeth", None],
         "_given": [
+            None,
             {
                 "id": "test_id",
                 "extension": [
@@ -208,8 +214,18 @@ def test_primitive_extension_as_dict():
                     },
                     {"url": "test/example", "valueInteger": 45},
                 ],
-            }
+            },
         ],
     }
     human_name = r4.HumanName(**data)
+    # Export is different because None value has been removed
+    assert human_name.dict(by_alias=True) != data
+    # Remove from data the None value and test
+    data["_given"][1]["extension"].pop(0)
     assert human_name.dict(by_alias=True) == data
+
+    # Test export in special cases
+    assert r4.HumanName(given__extension=[None]).dict(by_alias=True) == {}
+    assert r4.HumanName(given=None, given__extension=[None]).dict(by_alias=True) == {}
+    assert r4.HumanName(given=[None], given__extension=None).dict(by_alias=True) == {}
+    assert r4.HumanName(given=[None]).dict(by_alias=True) == {}

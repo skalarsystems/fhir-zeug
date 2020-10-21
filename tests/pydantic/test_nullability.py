@@ -1,11 +1,9 @@
 """Test null/empty values are removed correctly from data."""
-import pytest
 import typing
 
 from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import FHIRString
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
-    _without_empty_items,
 )
 
 
@@ -115,23 +113,3 @@ def test_none_as_list():
 
 def test_empty_strings_are_ignored():
     assert RootModel(field_a="", field_c=True).dict() == {"field_c": True}
-
-
-@pytest.mark.parametrize(
-    ("data", "expected"),
-    [
-        (
-            {"fieldA": [None, "value"], "_fieldA": ["value", None]},
-            {"fieldA": [None, "value"], "_fieldA": ["value", None]},
-        ),
-        (
-            {"fieldA": [None, "value"], "fieldA__extension": ["value", None]},
-            {"fieldA": [None, "value"], "fieldA__extension": ["value", None]},
-        ),
-    ],
-)
-def test_primitive_extension_nullability(
-    data: typing.Dict, expected: typing.Dict
-) -> None:
-    """Test `_without_empty_items` handles primitive extensions correctly."""
-    assert _without_empty_items(data) == expected

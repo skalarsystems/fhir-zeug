@@ -27,15 +27,60 @@ def choice_of_validator(choices, optional):
     return check_at_least_one
 
 
-def primitive_extension_validator(cls, v, values, field):
-    """Validate the extension of a primitive field.
+def get_primitive_field_root_validator(field_name: str) -> classmethod:
+    """Build a root validator that validates a primitive field.
 
-    Validator needs `values` in order to validate the extension against
-    its primitive field value.
+    Root validator is used in order to have access to all other (already validated)
+    fields. Skip_on_failure is set in order to avoid validating fields that
+    might have not been cleaned.
+    """
 
-    Note: `primitive_field_name` and `primitive_field_value` refer to the
-          primitive field that is extended and `field`/`v` refer to the
-          extension field.
+    @pydantic.root_validator(pre=True, skip_on_failure=True, allow_reuse=True)
+    def _validator(
+        cls, values: typing.Dict[str, typing.Any]
+    ) -> typing.Dict[str, typing.Any]:
+        # Check if both field and extension are set
+        # If field or extension is not set, we do not need to validate the
+        # consistency between them.
+        # Note: that might not be the case anymore when we will also validate cardinality.
+        inner_field_name = field_name
+        if inner_field_name not in values:
+            # Field can either be present as the real field name or its alias
+            inner_field_name = alias_generator(inner_field_name)
+            if inner_field_name not in values:
+                return values
+
+        extension_name = field_name + _EXTENSION_SUFFIX
+        if extension_name not in values:
+            # extension can either be present as the real extension name or its alias
+            extension_name = alias_generator(extension_name)
+            if extension_name not in values:
+                return values
+
+        # Get field and extension values
+        field_value = values[inner_field_name]
+        extension_value = values[extension_name]
+
+        # Validate them and get validated values
+        validated_field_value, validated_extension_value = _validate_primitive_field(
+            field_value, extension_value
+        )
+
+        # Assign new values and return
+        values[inner_field_name] = validated_field_value
+        values[extension_name] = validated_extension_value
+        return values
+
+    return _validator
+
+
+def _validate_primitive_field(
+    initial_field_value: typing.Any, extension_field_value: typing.Any
+) -> typing.Tuple[typing.Any, typing.Any]:
+    """Validate the consistency of a primitive field or list-of-primitives field.
+
+    Note: `initial_field_value` refer to the primitive field that is extended
+          and `extension_field_value` refer to the extension field.
 
     Validators :
         - from https://www.hl7.org/fhir/json.html#primitive :
@@ -48,28 +93,61 @@ def primitive_extension_validator(cls, v, values, field):
           extension/id, the second array will have a null at the position of that
           element."
 
-        - TODO: validate cardinality ? Make optional initial field ?
-    """
-    primitive_field_name = primitive_extension_alias_generator(field.name)[1:]
-    primitive_field_value = values.get(primitive_field_name)
+        - TODO: validate cardinality ? Make initial field optional ?
 
-    if v is not None and isinstance(v, list):
-        if primitive_field_value is not None:
-            # Primitive value is a list -> should already be validated by pydantic
-            assert isinstance(primitive_field_value, list)
+    See tests in tests/pydantic/test_primitive_list.py for examples.
+    """
+    if isinstance(extension_field_value, list):
+        if initial_field_value is None:
+            if None in extension_field_value:
+                raise Exception(
+                    "None values must have already been removed by `_without_empty_items`."
+                )
+        else:
+            # Extension is a list -> initial field must also be a list (or None)
+            if not isinstance(initial_field_value, list):
+                raise ValueError(
+                    "If an extension of a primitive field is a list, the initial field must be either `null` or a list. Not {type(initial_field_value)}."
+                )
 
             # Validate that both lists have same length
-            if len(primitive_field_value) != len(v):
+            if len(initial_field_value) != len(extension_field_value):
                 raise ValueError(
                     "When setting a primitive extension of a list, field list and field extension list must be both of same length."
                 )
 
-            for primitive_item, extension_item in zip(primitive_field_value, v):
-                if primitive_item is None and extension_item is None:
+            if len(initial_field_value) == 0:
+                raise ValueError(
+                    "When setting a primitive extension of a list, field and field extension cannot be both set with an empty list."
+                )
+
+            for initial_item, extension_item in zip(
+                initial_field_value, extension_field_value
+            ):
+                if initial_item is None and extension_item is None:
                     raise ValueError(
                         "When setting a primitive extension of a list, field item and primitive item cannot be `null` at the same position."
                     )
-    return v
+
+    if isinstance(initial_field_value, list):
+        if extension_field_value is None:
+            # List is not extended. Therefore, `null` values must not be present.
+            # `null` values should have already been removed by `_without_empty_items` since
+            # there wasn't an extension list.
+            if None in initial_field_value:
+                raise Exception(
+                    "None values must have already been removed by `_without_empty_items`."
+                )
+        elif isinstance(extension_field_value, list):
+            # Case already handled above
+            pass
+        else:
+            # Should have already been validated.
+            raise ValueError(
+                "Extension of a field with a list of primitive type must be of type `list`."
+            )
+
+    return initial_field_value, extension_field_value
 
 
 def camelcase_alias_generator(name: str) -> str:
@@ -309,6 +387,8 @@ def _without_empty_items(obj: typing.Any):
                 ):
                     if primitive_key not in cleaned_dict:
                         assert extension_key not in cleaned_dict
+                        # WARNING : Here lists consistency is NOT validated
+                        #           This is done later by the primitive field validator
                         cleaned_dict[primitive_key] = [
                             _without_empty_items(value) for value in primitive_value
                         ]
