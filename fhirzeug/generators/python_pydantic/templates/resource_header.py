@@ -357,7 +357,9 @@ def _without_empty_items(obj: typing.Any):
     """Clean empty items.
 
     See : https://www.hl7.org/fhir/datatypes.html#representations
-    TODO: add support for extensions: https://www.hl7.org/fhir/json.html#null
+
+    Extension of list of primitive values is handled differently by
+    its own root validator. See: https://www.hl7.org/fhir/json.html#null
     """
     if isinstance(obj, Mapping):
         cleaned_dict = {}
