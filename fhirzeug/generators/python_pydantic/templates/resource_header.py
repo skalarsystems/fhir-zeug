@@ -114,9 +114,28 @@ def _validate_primitive_field(
 
             # Validate that both lists have same length
             if len(initial_field_value) != len(extension_field_value):
-                raise ValueError(
-                    "When setting a primitive extension of a list, field list and field extension list must be both of same length."
-                )
+                if all(value is None for value in initial_field_value) and any(
+                    value is not None for value in extension_field_value
+                ):
+                    # Case `initial_field_value=[None]` and `extension_field_value=['A', None, 'B']`
+                    # Initial value is set to `None` and `None` values in second array are removed.
+                    return (
+                        None,
+                        [value for value in extension_field_value if value is not None],
+                    )
+                elif any(value is not None for value in initial_field_value) and all(
+                    value is None for value in extension_field_value
+                ):
+                    # Case `initial_field_value=['A', None, 'B']` and `extension_field_value=[None]`
+                    # Extension value is set to `None` and `None` values in first array are removed.
+                    return (
+                        [value for value in initial_field_value if value is not None],
+                        None,
+                    )
+                else:
+                    raise ValueError(
+                        "When setting a primitive extension of a list, field list and field extension list must be both of same length."
+                    )
 
             if len(initial_field_value) == 0:
                 raise ValueError(

@@ -158,6 +158,18 @@ def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtensi
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given=[None, NAME, None], given__extension=[primitive_extension])
 
+    # Not the same length but a list is either empty, either filled with None values
+    # -> Valid and empty list is set to None
+    name = r4.HumanName(given=[], given__extension=[primitive_extension])
+    assert name.given is None
+    name = r4.HumanName(given=[None], given__extension=[primitive_extension])
+    assert name.given is None
+
+    name = r4.HumanName(given=[NAME], given__extension=[])
+    assert name.given__extension is None
+    name = r4.HumanName(given=[NAME], given__extension=[None])
+    assert name.given__extension is None
+
     # Provided value can be None but not in both arrays for the same position
     r4.HumanName(given=[None, NAME], given__extension=[primitive_extension, None])
     r4.HumanName(given=[NAME, NAME], given__extension=[primitive_extension, None])
