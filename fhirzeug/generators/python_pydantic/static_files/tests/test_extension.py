@@ -104,9 +104,7 @@ def test_primitive_extension_object(
     r4.PrimitiveExtension()
     r4.PrimitiveExtension(id=ID)
     r4.PrimitiveExtension(extension=[human_extension, integer_extension])
-    r4.PrimitiveExtension(
-        id=ID, extension=[human_extension],
-    )
+    r4.PrimitiveExtension(id=ID, extension=[human_extension])
 
     with pytest.raises(pydantic.ValidationError):
         # Extension must be a list
@@ -160,13 +158,13 @@ def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtensi
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given=[None, NAME, None], given__extension=[primitive_extension])
 
-    # Provide value can be None but not on both sides for the same item
+    # Provided value can be None but not in both arrays for the same position
     r4.HumanName(given=[None, NAME], given__extension=[primitive_extension, None])
     r4.HumanName(given=[NAME, NAME], given__extension=[primitive_extension, None])
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given=[NAME, None], given__extension=[primitive_extension, None])
 
-    # Both list cannot be empty at the same time
+    # Both lists cannot be empty at the same time
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given=[], given__extension=[])
 
@@ -201,13 +199,13 @@ def test_primitive_extension_as_dict():
 
     # Test with None values in list.
     data = {
-        "given": ["Queen Elisabeth", None],
+        "given": ["Queen Elisabeth", None],  # This None value is NOT stripped
         "_given": [
-            None,
+            None,  # This None value is NOT stripped
             {
                 "id": "test_id",
                 "extension": [
-                    None,
+                    None,  # This None value will be stripped
                     {
                         "url": "test/example",
                         "valueHumanName": {"given": ["Queen Elisabeth"]},

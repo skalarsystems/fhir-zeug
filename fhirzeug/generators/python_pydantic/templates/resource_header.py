@@ -31,28 +31,29 @@ def get_primitive_field_root_validator(field_name: str) -> classmethod:
     """Build a root validator that validates a primitive field.
 
     Root validator is used in order to have access to all other (already validated)
-    fields. Skip_on_failure is set in order to avoid validating fields that
-    might have not been cleaned.
+    fields. `skip_on_failure` is set in order to avoid validating fields that
+    might not be cleaned.
     """
 
     @pydantic.root_validator(pre=True, skip_on_failure=True, allow_reuse=True)
     def _validator(
         cls, values: typing.Dict[str, typing.Any]
     ) -> typing.Dict[str, typing.Any]:
-        # Check if both field and extension are set
-        # If field or extension is not set, we do not need to validate the
-        # consistency between them.
+        # Check if both field and extension are set.
+        # If field or extension is not set, we do not need to validate the consistency
+        # between them.
         # Note: that might not be the case anymore when we will also validate cardinality.
+
+        # Field can either be present as the real field name or its alias
         inner_field_name = field_name
         if inner_field_name not in values:
-            # Field can either be present as the real field name or its alias
             inner_field_name = alias_generator(inner_field_name)
             if inner_field_name not in values:
                 return values
 
+        # Extension can either be present as the real extension name or its alias
         extension_name = field_name + _EXTENSION_SUFFIX
         if extension_name not in values:
-            # extension can either be present as the real extension name or its alias
             extension_name = alias_generator(extension_name)
             if extension_name not in values:
                 return values
@@ -95,11 +96,12 @@ def _validate_primitive_field(
 
         - TODO: validate cardinality ? Make initial field optional ?
 
-    See tests in tests/pydantic/test_primitive_list.py for examples.
+    See tests in `tests/pydantic/test_primitive_list.py` for examples.
     """
     if isinstance(extension_field_value, list):
         if initial_field_value is None:
             if None in extension_field_value:
+                # Should never reach this point.
                 raise Exception(
                     "None values must have already been removed by `_without_empty_items`."
                 )
@@ -107,7 +109,7 @@ def _validate_primitive_field(
             # Extension is a list -> initial field must also be a list (or None)
             if not isinstance(initial_field_value, list):
                 raise ValueError(
-                    "If an extension of a primitive field is a list, the initial field must be either `null` or a list. Not {type(initial_field_value)}."
+                    f"If an extension of a primitive field is a list, the initial field must be either `null` or a list. Not {type(initial_field_value)}."
                 )
 
             # Validate that both lists have same length
@@ -131,6 +133,7 @@ def _validate_primitive_field(
 
     if isinstance(initial_field_value, list):
         if extension_field_value is None:
+            # Should never reach this point.
             # List is not extended. Therefore, `null` values must not be present.
             # `null` values should have already been removed by `_without_empty_items` since
             # there wasn't an extension list.

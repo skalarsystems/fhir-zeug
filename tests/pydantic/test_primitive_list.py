@@ -8,17 +8,19 @@ from fhirzeug.generators.python_pydantic.templates.resource_header import (
 )
 import pydantic
 
+OPTIONAL_LIST_T = typing.Optional[typing.List[typing.Optional[str]]]
+
 
 class ExampleModel(FHIRAbstractBase):
     """Model for tests that simulate the behavior of a generated resource."""
 
-    field: typing.Optional[typing.List[typing.Optional[str]]]
-    field__extension: typing.Optional[typing.List[typing.Optional[str]]]
+    field: OPTIONAL_LIST_T
+    field__extension: OPTIONAL_LIST_T
 
     # Encountered once an issue with field names using "snake_case"
-    # It is now tested for robustness
-    snake_field: typing.Optional[typing.List[typing.Optional[str]]]
-    snake_field__extension: typing.Optional[typing.List[typing.Optional[str]]]
+    # It is now tested for robustness.
+    snake_field: OPTIONAL_LIST_T
+    snake_field__extension: OPTIONAL_LIST_T
 
     _validate_primitive_field = get_primitive_field_root_validator("field")
     _validate_primitive_snake_field = get_primitive_field_root_validator("snake_field")
@@ -84,17 +86,19 @@ def test_primitive_list_field(
             expected_dict[extension_name_alias] = field_extension_validated_value
         assert example.dict(by_alias=True) == expected_dict
 
-    example = ExampleModel(
-        **{field_name: field_value, extension_name: field_extension_value}
+    # Basic test
+    _validate_example(
+        ExampleModel(**{field_name: field_value, extension_name: field_extension_value})
     )
-    _validate_example(example)
 
+    # Test within container model, created with real fields names.
     _validate_example(
         ContainerModel(
             example={field_name: field_value, extension_name: field_extension_value}
         ).example
     )
 
+    # Test within container model, created with alias fields names.
     _validate_example(
         ContainerModel(
             example={
