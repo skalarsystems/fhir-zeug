@@ -492,7 +492,7 @@ class FHIRCodeSystem(object):
             if c["code"][:1].isdigit():
                 self.generate_enum = False
                 logger.info(
-                    "Will not generate enum for CodeSystem '{self.url}' because at least one concept code starts with a number"
+                    f"Will not generate enum for CodeSystem '{self.url}' because at least one concept code starts with a number"
                 )
                 return None
 

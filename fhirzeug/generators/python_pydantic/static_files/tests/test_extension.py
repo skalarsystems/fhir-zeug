@@ -120,9 +120,9 @@ def test_primitive_extension_basic_usage(primitive_extension: r4.PrimitiveExtens
     r4.Patient(gender="unknown", gender__extension=primitive_extension)
 
 
-@pytest.mark.parametrize("null_value", [None, "", {}, []])
+@pytest.mark.parametrize("empty_value", [None, "", {}, []])
 def test_primitive_list_extension_usage(
-    primitive_extension: r4.PrimitiveExtension, null_value: typing.Any
+    primitive_extension: r4.PrimitiveExtension, empty_value: typing.Any
 ):
     """Test usage of primitive list extension."""
     # `given` field is Optional for HumanName
@@ -154,14 +154,14 @@ def test_primitive_list_extension_usage(
 
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(
-            given=[null_value, NAME],
-            given__extension=[primitive_extension, null_value, primitive_extension],
+            given=[empty_value, NAME],
+            given__extension=[primitive_extension, empty_value, primitive_extension],
         )
 
     # Not the same length because `null` values are not removed from list
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(
-            given=[null_value, NAME, None], given__extension=[primitive_extension]
+            given=[empty_value, NAME, None], given__extension=[primitive_extension]
         )
 
     # Not the same length but a list is either empty, either filled with `null` values
@@ -171,23 +171,26 @@ def test_primitive_list_extension_usage(
     )
     assert name.given is None
     name = r4.HumanName(
-        given=[null_value], given__extension=[primitive_extension, primitive_extension]
+        given=[empty_value], given__extension=[primitive_extension, primitive_extension]
     )
     assert name.given is None
 
     name = r4.HumanName(given=[NAME, NAME], given__extension=[])
     assert name.given__extension is None
-    name = r4.HumanName(given=[NAME, NAME], given__extension=[null_value])
+    name = r4.HumanName(given=[NAME, NAME], given__extension=[empty_value])
     assert name.given__extension is None
 
     # Provided value can be None but not in both arrays for the same position
     r4.HumanName(
-        given=[null_value, NAME], given__extension=[primitive_extension, null_value]
+        given=[empty_value, NAME], given__extension=[primitive_extension, empty_value]
     )
-    r4.HumanName(given=[NAME, NAME], given__extension=[primitive_extension, null_value])
+    r4.HumanName(
+        given=[NAME, NAME], given__extension=[primitive_extension, empty_value]
+    )
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(
-            given=[NAME, null_value], given__extension=[primitive_extension, null_value]
+            given=[NAME, empty_value],
+            given__extension=[primitive_extension, empty_value],
         )
 
     # Both lists cannot be empty at the same time
