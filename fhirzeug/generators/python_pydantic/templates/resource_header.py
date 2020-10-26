@@ -8,6 +8,14 @@ import json
 
 import pydantic
 
+# Field of JSON-primitive types can be extended in FHIR using an underscore
+# Example: field `given` (type `str`) is extended by `_given`.
+# However, in pydantic fields beginning with an underscore are ignored by default.
+# As a workaround, we set an alias for primitive fields extensions by removing the
+# underscore prefix and adding a `__extension` suffix to the extension name.
+# See method `primitive_extension_alias_generator` below.
+_EXTENSION_SUFFIX = "__extension"
+
 
 def choice_of_validator(choices, optional):
     def check_at_least_one(cls, values):
@@ -24,8 +32,155 @@ def choice_of_validator(choices, optional):
     return check_at_least_one
 
 
+def get_primitive_field_root_validator(field_name: str) -> classmethod:
+    """Build a root validator that validates a primitive field.
+
+    Root validator is used in order to have access to all other (already validated)
+    fields. `skip_on_failure` is set in order to avoid validating fields that
+    might not be cleaned.
+    """
+
+    @pydantic.root_validator(pre=True, skip_on_failure=True, allow_reuse=True)
+    def _validator(
+        cls, values: typing.Dict[str, typing.Any]
+    ) -> typing.Dict[str, typing.Any]:
+        # Check if both field and extension are set.
+        # If field or extension is not set, we do not need to validate the consistency
+        # between them.
+        # Note: that might not be the case anymore when we will also validate cardinality.
+
+        # Field can either be present as the real field name or its alias
+        inner_field_name = field_name
+        if inner_field_name not in values:
+            inner_field_name = alias_generator(inner_field_name)
+            if inner_field_name not in values:
+                return values
+
+        # Extension can either be present as the real extension name or its alias
+        extension_name = field_name + _EXTENSION_SUFFIX
+        if extension_name not in values:
+            extension_name = alias_generator(extension_name)
+            if extension_name not in values:
+                return values
+
+        # Get field and extension values
+        field_value = values[inner_field_name]
+        extension_value = values[extension_name]
+
+        # Validate them and get validated values
+        validated_field_value, validated_extension_value = _validate_primitive_field(
+            field_value, extension_value
+        )
+
+        # Assign new values and return
+        values[inner_field_name] = validated_field_value
+        values[extension_name] = validated_extension_value
+        return values
+
+    return _validator
+
+
+def _validate_primitive_field(
+    initial_field_value: typing.Any, extension_field_value: typing.Any
+) -> typing.Tuple[typing.Any, typing.Any]:
+    """Validate the consistency of a primitive field or list-of-primitives field.
+
+    Note: `initial_field_value` refer to the primitive field that is extended
+          and `extension_field_value` refer to the extension field.
+
+    Validators :
+        - from https://www.hl7.org/fhir/json.html#primitive :
+          "In the case where the primitive element may repeat, it is represented
+          in two arrays. JSON null values are used to fill out both arrays so
+          that the id and/or extension are aligned with the matching value in the
+          first array."
+          "Note: when one of the repeating elements has no value, it is represented
+          in the first array using a null. When an element has a value but no
+          extension/id, the second array will have a null at the position of that
+          element."
+
+        - TODO : if a field is required, it is possible to provide only an extension
+                 instead. At the moment, this behavior is NOT implemented (a required
+                 primitive field must always be filled). TODO : fix this.
+
+    See tests in `tests/pydantic/test_primitive_list.py` for examples.
+    """
+    if isinstance(extension_field_value, list):
+        if initial_field_value is None:
+            if None in extension_field_value:
+                # Should never reach this point.
+                raise Exception(
+                    "None values must have already been removed by `_without_empty_items`."
+                )
+        else:
+            # Extension is a list -> initial field must also be a list (or None)
+            if not isinstance(initial_field_value, list):
+                raise ValueError(
+                    f"If an extension of a primitive field is a list, the initial field must be either `null` or a list. Not {type(initial_field_value)}."
+                )
+
+            # Validate that both lists have same length
+            if len(initial_field_value) != len(extension_field_value):
+                if all(value is None for value in initial_field_value) and any(
+                    value is not None for value in extension_field_value
+                ):
+                    # Case `initial_field_value=[None]` and `extension_field_value=['A', None, 'B']`
+                    # Initial value is set to `None` and `None` values in second array are removed.
+                    return (
+                        None,
+                        [value for value in extension_field_value if value is not None],
+                    )
+                elif any(value is not None for value in initial_field_value) and all(
+                    value is None for value in extension_field_value
+                ):
+                    # Case `initial_field_value=['A', None, 'B']` and `extension_field_value=[None]`
+                    # Extension value is set to `None` and `None` values in first array are removed.
+                    return (
+                        [value for value in initial_field_value if value is not None],
+                        None,
+                    )
+                else:
+                    raise ValueError(
+                        "When setting a primitive extension of a list, field list and field extension list must be both of same length."
+                    )
+
+            if len(initial_field_value) == 0:
+                raise ValueError(
+                    "When setting a primitive extension of a list, field and field extension cannot be both set with an empty list."
+                )
+
+            for initial_item, extension_item in zip(
+                initial_field_value, extension_field_value
+            ):
+                if initial_item is None and extension_item is None:
+                    raise ValueError(
+                        "When setting a primitive extension of a list, field item and primitive item cannot be `null` at the same position."
+                    )
+
+    if isinstance(initial_field_value, list):
+        if extension_field_value is None:
+            # Should never reach this point.
+            # List is not extended. Therefore, `null` values must not be present.
+            # `null` values should have already been removed by `_without_empty_items` since
+            # there wasn't an extension list.
+            if None in initial_field_value:
+                raise Exception(
+                    "None values must have already been removed by `_without_empty_items`."
+                )
+        elif isinstance(extension_field_value, list):
+            # Case already handled above
+            pass
+        else:
+            # Should have already been validated.
+            raise ValueError(
+                "Extension of a field with a list of primitive type must be of type `list`."
+            )
+
+    return initial_field_value, extension_field_value
+
+
 def camelcase_alias_generator(name: str) -> str:
-    """Maps snakecase to camelcase.
+    """Map snakecase to camelcase.
 
     This enables members to be created from camelCase. It takes the existing snakecase membername
     like foo_bar and converts it to its camelcase pendant fooBar.
@@ -33,17 +188,33 @@ def camelcase_alias_generator(name: str) -> str:
     Additionally it removes trailing _, since this is used to make membernames of reserved keywords
     usable, like `class`.
     """
-
     if name.endswith("_"):
         name = name[:-1]
     return stringcase.camelcase(name)
 
 
+def primitive_extension_alias_generator(name: str) -> str:
+    """Map pydantic name to JSON extension name (only primitive fields).
+
+    Add `_` prefix and remove `__extension` suffix.
+    """
+    if name.endswith(_EXTENSION_SUFFIX):
+        return "_" + name[: -len(_EXTENSION_SUFFIX)]
+    return name
+
+
+def alias_generator(name: str) -> str:
+    """Map a field name to its alias."""
+    name = primitive_extension_alias_generator(name)
+    name = camelcase_alias_generator(name)
+    return name
+
+
 class DocEnum(enum.Enum):
-    """Enum with docstrings support"""
+    """Enum with docstrings support."""
 
     def __new__(cls, value, doc=None):
-        """add docstring to the member of Enum if exists
+        """Add docstring to the member of Enum if exists.
 
         Args:
             value: Enum member value
@@ -106,8 +277,7 @@ def json_loads(*args, **kwargs):
 
 
 class FHIRAbstractBase(pydantic.BaseModel):
-    """Abstract base class for all FHIR elements.
-    """
+    """Abstract base class for all FHIR elements."""
 
     class Meta:
         profile: typing.List[str] = []
@@ -179,7 +349,7 @@ class FHIRAbstractBase(pydantic.BaseModel):
         """Return a field "unique" to this class to store dynamic validators.
 
         Unicity is guaranted unless two FHIR classes has the same name and one is
-        the child of the other one. 
+        the child of the other one.
         TODO : ensure unicity of this field name in every cases.
         """
         return f"_dynamic_validators__{cls.__name__}"
@@ -205,7 +375,7 @@ class FHIRAbstractBase(pydantic.BaseModel):
         return values
 
     class Config:
-        alias_generator = camelcase_alias_generator
+        alias_generator = alias_generator
         allow_population_by_field_name = True
         extra = "forbid"
         json_dumps = json_dumps
@@ -213,13 +383,51 @@ class FHIRAbstractBase(pydantic.BaseModel):
 
 
 def _without_empty_items(obj: typing.Any):
-    """
-    Clean empty items: https://www.hl7.org/fhir/datatypes.html#representations
-    TODO: add support for extensions: https://www.hl7.org/fhir/json.html#null
+    """Clean empty items.
+
+    See : https://www.hl7.org/fhir/datatypes.html#representations
+
+    Extension of list of primitive values is handled differently by
+    its own root validator. See: https://www.hl7.org/fhir/json.html#null
     """
     if isinstance(obj, Mapping):
         cleaned_dict = {}
         for key, value in obj.items():
+            primitive_key, extension_key = None, None
+            if key.startswith("_") and key[1:] in obj:
+                primitive_key = key[1:]
+                extension_key = key
+            elif ("_" + key) in obj:
+                primitive_key = key
+                extension_key = "_" + key
+            elif (
+                key.endswith(_EXTENSION_SUFFIX)
+                and key[: -len(_EXTENSION_SUFFIX)] in obj
+            ):
+                primitive_key = key[: -len(_EXTENSION_SUFFIX)]
+                extension_key = key
+            elif key + _EXTENSION_SUFFIX in obj:
+                primitive_key = key
+                extension_key = key + _EXTENSION_SUFFIX
+
+            if (primitive_key, extension_key) != (None, None):
+                primitive_value = obj[primitive_key]
+                extension_value = obj[extension_key]
+                if isinstance(primitive_value, list) and isinstance(
+                    extension_value, list
+                ):
+                    if primitive_key not in cleaned_dict:
+                        assert extension_key not in cleaned_dict
+                        # WARNING : Here lists consistency is NOT validated
+                        #           This is done later by the primitive field validator
+                        cleaned_dict[primitive_key] = [
+                            _without_empty_items(value) for value in primitive_value
+                        ]
+                        cleaned_dict[extension_key] = [
+                            _without_empty_items(value) for value in extension_value
+                        ]
+                    continue
+
             cleaned_value = _without_empty_items(value)
             if cleaned_value is not None:
                 cleaned_dict[key] = cleaned_value

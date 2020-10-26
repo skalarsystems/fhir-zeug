@@ -1,20 +1,29 @@
+"""Define representation of FHIRClasses e.g. FHIR Resources."""
+
 from .logger import logger
 from typing import List, Dict, Optional, Set, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .fhirspec import FHIRStructureDefinitionElement, FHIRElementType
 
+JSON_PRIMITIVE_FIELDS: Set[str] = {
+    "bool",
+    "float",
+    "int",
+    "str",
+}
+
 
 class FHIRClass:
-    """ An element/resource that should become its own class.
-    """
+    """An element/resource that should become its own class."""
 
     known: Dict[str, "FHIRClass"] = {}
 
     @classmethod
     def for_element(cls, element):
-        """ Returns an existing class or creates one for the given element.
-        Returns a tuple with the class and a bool indicating creation.
+        """Return an existing class or creates one for the given element.
+
+        Return a tuple with the class and a bool indicating creation.
         """
         assert element.represents_class
         class_name = element.name_if_class
@@ -46,7 +55,7 @@ class FHIRClass:
         self.add_url(element.profile.url)
 
     def add_property(self, prop: "FHIRClassProperty") -> None:
-        """ Add a property to the receiver.
+        """Add a property to the receiver.
 
         :param FHIRClassProperty prop: A FHIRClassProperty instance
         """
@@ -221,8 +230,7 @@ class FHIRClass:
 
 
 class FHIRClassProperty:
-    """ An element describing an instance property.
-    """
+    """An element describing an instance property."""
 
     def __init__(
         self,
@@ -259,10 +267,24 @@ class FHIRClassProperty:
         self.module_name = (
             None  # should only be set if it's an external module (think Python)
         )
+
+        # JSON class is the field type used when json encoded: dict, str, float, bool or int
         self.json_class = spec.json_class_for_class_name(self.class_name)
+
+        # is_native means that the field type is a "native" python type
+        # Note: "native" or "at least already defined in the file when generating the field"
+        # Example: str, decimal.Decimal, bool, FHIRDateTime, FHIRString...
+        # Exhaustive list is defined in settings > mapping_rules > natives)
         self.is_native = (
             False if self.enum else spec.class_name_is_native(self.class_name)
         )
+
+        # A JSON primitive field is any JSON data type that is not dict (e.g "single value field")
+        # /!\ `is_json_primitive_field` is different from `is_native`
+        #     Example : AccountStatus is an enum, not a native type of Python but
+        #               represented as a primitive JSON type (str).
+        self.is_json_primitive_field = self.json_class in JSON_PRIMITIVE_FIELDS
+
         self.is_array = True if element.n_max == "*" else False
         self.is_summary = element.is_summary
         self.is_summary_n_min_conflict = element.summary_n_min_conflict

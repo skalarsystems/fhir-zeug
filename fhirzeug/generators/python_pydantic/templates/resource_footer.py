@@ -3,6 +3,13 @@
 Reference._add_post_root_validator(_reference_validator)
 
 
+class PrimitiveExtension(Element):
+    """Class to describe any extension of a primitive value.
+
+    Contains only `id` and `extension`.
+    """
+
+
 def inheritors(klass):
     subclasses = set()
     work = [klass]

@@ -20,8 +20,14 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
         List of `str` items. """
 
 
+{% set primitive_fields = [] %}
 {% set enums = [] %}
 {% for prop in clazz.properties %}
+    {%- set field_name = "{}".format(prop.name | snake_case) -%}
+    {%- if prop.is_json_primitive_field %}
+        {%- set extension_field_name = "{}__extension".format(field_name) -%}
+    {% endif %}
+
     {%- if prop.enum %}
         {%- if prop.enum.is_codesystem_known %}
             {{ enums.append({"name":prop.name, "enum": prop.enum.name}) or ""}}
@@ -33,10 +39,12 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     {%- endif %}
     {%- if prop.is_array %}
         {%- if type_name == "FHIRString" %}{# all strings inside of arrays should be not empty #}
-            {%- set type_name = 'typing.List[FHIRRequiredString]' %}
-        {%- else %}
-            {%- set type_name = "typing.List[{}]".format(type_name) %}
+            {%- set type_name = 'FHIRRequiredString' %}
         {%- endif %}
+        {%- if prop.is_json_primitive_field %}{# List of primitive fields are validated separately and can contain null values #}
+            {%- set type_name = "typing.Optional[{}]".format(type_name) %}
+        {%- endif %}
+        {%- set type_name = "typing.List[{}]".format(type_name) %}
     {%- endif %}
     {%- if prop.enum %}
         {%- if not prop.enum.is_codesystem_known and prop.enum.restricted_to %}
@@ -53,15 +61,35 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
     {%- if type_name == "FHIRString" and not prop.is_optional %}{# required strings should be not empty #}
         {%- set type_name = "FHIRRequiredString" %}
     {%- endif %}
-    {{ prop.name | snake_case }}: {{ type_name }}
+    {{ field_name }}: {{ type_name }}
 
     """ {{ prop.short|wordwrap(67, wrapstring="\n        ") }}.
     {% if prop.is_array %}List of{% else %}Type{% endif %} `{{ prop.desired_classname }}`{% if prop.is_array %} items{% endif %}
     {%- if prop.reference_to_names|length > 0 %} referencing `{{ prop.reference_to_names|join(', ') }}`{% endif %}
-    {%- if prop.json_class != prop.desired_classname %} (represented as `{{ prop.json_class }}` in JSON){% endif %}. """
+    {%- if prop.json_class != prop.desired_classname %} (represented as `{{ prop.json_class }}` in JSON){% endif %}.
+    {%- if prop.is_json_primitive_field %} Is a JSON Primitive element.{% endif %}
+    """
+
+    {%- if prop.is_json_primitive_field %}
+    {% do primitive_fields.append(field_name) %}
+    {%- set type_name = "typing.Optional[\"PrimitiveExtension\"]" %}
+    {%- if prop.is_array %}
+        {%- set type_name = "typing.Optional[typing.List[{}]]".format(type_name) %}
+    {%- endif %}
+
+    {{ extension_field_name }}: {{ type_name }}
+
+    """
+    Extension of a JSON primitive element. 
+    Property is represented in JSON as `_{{ field_name }}`
+    but an alias is used in order to be validated by Pydantic.
+    See : https://www.hl7.org/fhir/json.html#primitive
+    """
+
+    {% endif %}
 
 {%- if prop.desired_classname == "Resource" %}
-    @pydantic.validator("{{ prop.name | snake_case }}", pre=True,  each_item=True)
+    @pydantic.validator("{{ field_name }}", pre=True,  each_item=True)
     def resource_factory(cls, value):
         if isinstance(value, Resource):
             return value
@@ -90,4 +118,10 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
                 a = {"value": item.value, "description": item.__doc__}
                 enums.append(a)
         {% endfor %}
+{% endif %}
+
+{%-if primitive_fields %}
+    {%- for field_name in primitive_fields %}
+    _validate_primitive_{{ field_name }} = get_primitive_field_root_validator("{{ field_name }}")
+    {% endfor %}
 {% endif %}

@@ -1,14 +1,17 @@
+"""Test null/empty values are removed correctly from data.
+
+These tests checks if empty items are cleaned as described
+in https://www.hl7.org/fhir/datatypes.html#representations
+
+A special case for empty values is extension of primitive fields.
+This topic has been tested in a separate file `test_primitive_list.py`.
+"""
 import typing
 
 from fhirzeug.generators.python_pydantic.templates.fhir_basic_types import FHIRString
 from fhirzeug.generators.python_pydantic.templates.resource_header import (
     FHIRAbstractBase,
 )
-
-
-# These tests checks if empty items are cleaned as described
-# in https://www.hl7.org/fhir/datatypes.html#representations
-# TODO: add support for extensions: https://www.hl7.org/fhir/json.html#null
 
 
 class ChildModel(FHIRAbstractBase):

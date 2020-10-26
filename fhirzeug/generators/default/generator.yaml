@@ -31,8 +31,8 @@ template:
 
 # Configuration for classes and resources
 default_base:
-  "complex-type": FHIRAbstractBase  # the class to use for "Element" types
-  resource: FHIRAbstractResource  # the class to use for "Resource" types
+  "complex-type": FHIRAbstractBase # the class to use for "Element" types
+  resource: FHIRAbstractResource # the class to use for "Resource" types
 
 # Naming rules to apply
 naming_rules:
@@ -46,9 +46,9 @@ naming_rules:
   backbone_class_adds_parent: True
 
 manual_profiles:
-  - origpath  : ./fhirzeug/generators/python_pydantic/templates/fhirabstractbase.py
-    module    : fhirabstractbase
-    contains  :
+  - origpath: ./fhirzeug/generators/python_pydantic/templates/fhirabstractbase.py
+    module: fhirabstractbase
+    contains:
       - boolean
       - string
       - base64Binary
@@ -63,32 +63,30 @@ manual_profiles:
       - uuid
       - FHIRAbstractBase
 
-
-  - origpath  : ./fhirzeug/generators/python_pydantic/templates/fhirabstractresource.py
-    module    : fhirabstractresource
-    contains  :
+  - origpath: ./fhirzeug/generators/python_pydantic/templates/fhirabstractresource.py
+    module: fhirabstractresource
+    contains:
       - FHIRAbstractResource
 
-  - origpath  : ./fhirzeug/generators/python_pydantic/templates/fhir_basic_types.py
-    module    : fhirdate
-    contains  :
+  - origpath: ./fhirzeug/generators/python_pydantic/templates/fhir_basic_types.py
+    module: fhirdate
+    contains:
       - date
       - dateTime
       - instant
       - time
 
-  - origpath  : ./fhirzeug/generators/python_pydantic/templates/fhirsearch.py
-    module    : fhirsearch
-    contains  :
+  - origpath: ./fhirzeug/generators/python_pydantic/templates/fhirsearch.py
+    module: fhirsearch
+    contains:
       - FHIRSearch
-
 
 # Mappings for the FHIR class generator.
 mapping_rules:
   # Which class names to map to resources and elements
   classmap:
     Any: Resource
-    Practitioner.role: PractRole  # to avoid Practinioner.role and PractitionerRole generating the same class
+    Practitioner.role: PractRole # to avoid Practinioner.role and PractitionerRole generating the same class
     boolean: bool
     integer: FHIRInt
     positiveInt: FHIRPositiveInt
@@ -101,7 +99,7 @@ mapping_rules:
     string: FHIRString
     markdown: FHIRString
     id: FHIRId
-    code: FHIRCode  # for now we're not generating enums for these
+    code: FHIRCode # for now we're not generating enums for these
     uri: FHIRString
     url: FHIRString
     canonical: FHIRString
@@ -111,28 +109,53 @@ mapping_rules:
     base64Binary: FHIRBase64Binary
 
   # Classes to be replaced with different ones at resource rendering time
-  replacemap: {}
+  replacemap:
+    {}
     # Reference: FHIRReference  # `FHIRReference` adds dereferencing capabilities
 
   # Which class names are native to the language (or can be treated this way)
   natives:
     - bool
-    - int
-    - float
-    - str
-    - dict
     - decimal.Decimal
+    - FHIRBase64Binary
+    - FHIRCode
+    - FHIRDate
+    - FHIRDateTime
+    - FHIRId
+    - FHIRInstant
+    - FHIRInt
+    - FHIROid
+    - FHIRPositiveInt
+    - FHIRRequiredString
     - FHIRString
+    - FHIRTime
+    - FHIRUnsignedInt
+    - float
+    - int
+    - str
 
   # Which classes are to be expected from JSON decoding
   jsonmap:
-    str: str
-    int: int
     bool: bool
     decimal.Decimal: float
+    FHIRBase64Binary: str
+    FHIRCode: str
     FHIRDate: str
+    FHIRDateTime: str
+    FHIRId: str
+    FHIRInstant: str
+    FHIRInt: str
+    FHIROid: str
+    FHIRPositiveInt: int
+    FHIRRequiredString: str
+    FHIRString: str
+    FHIRTime: str
+    FHIRUnsignedInt: str
+    float: float
+    int: int
+    str: str
 
-  jsonmap_default : dict
+  jsonmap_default: dict
 
   # Properties that need to be renamed because of language keyword conflicts
   reservedmap:
@@ -150,7 +173,6 @@ mapping_rules:
     not: not_
     pass: pass_
 
-
   # For enum codes where a computer just cannot generate reasonable names
   enum_map:
     "=": eq
@@ -160,7 +182,6 @@ mapping_rules:
     ">": gt
     ">=": gte
     "*": max
-
 
   # If you want to give specific names to enums based on their URI
   enum_namemap:
@@ -180,5 +201,6 @@ mapping_rules:
     "http://terminology.hl7.org/CodeSystem/practitioner-role": "PractitionerRoleCodes"
 
   # If certain CodeSystems don't need to generate an enum
-  enum_ignore: {}
-      # 'http://hl7.org/fhir/resource-type-link',
+  enum_ignore:
+    {}
+    # 'http://hl7.org/fhir/resource-type-link',
