@@ -8,7 +8,12 @@ import json
 
 import pydantic
 
-
+# Field of JSON-primitive types can be extended in FHIR using an underscore
+# Example: field `given` (type `str`) is extended by `_given`.
+# However, in pydantic fields beginning with an underscore are ignored by default.
+# As a workaround, we set an alias for primitive fields extensions by removing the
+# underscore prefix and adding a `__extension` suffix to the extension name.
+# See method `primitive_extension_alias_generator` below.
 _EXTENSION_SUFFIX = "__extension"
 
 
@@ -94,7 +99,9 @@ def _validate_primitive_field(
           extension/id, the second array will have a null at the position of that
           element."
 
-        - TODO: validate cardinality ? Make initial field optional ?
+        - TODO : if a field is required, it is possible to provide only an extension
+                 instead. At the moment, this behavior is NOT implemented (a required
+                 primitive field must always be filled). TODO : fix this.
 
     See tests in `tests/pydantic/test_primitive_list.py` for examples.
     """

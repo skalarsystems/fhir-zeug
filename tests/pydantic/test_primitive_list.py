@@ -42,14 +42,22 @@ class ContainerModel(FHIRAbstractBase):
     [
         (["A"], ["extA"], ["A"], ["extA"]),
         (["A", None], None, ["A"], None),
+        (["A", ""], None, ["A"], None),
         (["A", "B"], None, ["A", "B"], None),
         (["A", None], [None, "extB"], ["A", None], [None, "extB"]),
+        (["A", ""], [None, "extB"], ["A", None], [None, "extB"]),
         (["A", "B"], [None, None], ["A", "B"], [None, None]),
         (["A", "B"], [], ["A", "B"], None),  # Valid but empty list is set to None
         (["A", "B"], [None], ["A", "B"], None),  # Valid but None list is set to None
         (  # Valid but None list is set to None and None values are removed from first array
             ["A", None, "B", None],
             [None],
+            ["A", "B"],
+            None,
+        ),
+        (  # Valid but None list is set to None and None values are removed from first array
+            ["A", None, "B", None],
+            [{}, ""],
             ["A", "B"],
             None,
         ),
@@ -125,6 +133,7 @@ def test_primitive_list_field(
         ([], []),
         ([None], [None]),
         (["A", None], ["extA", None]),
+        (["A", None, "B", None], [None, "extA", "extB", None]),
     ],
 )
 @pytest.mark.parametrize("inversion", [True, False])

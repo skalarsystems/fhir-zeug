@@ -1,6 +1,7 @@
+"""Test `pydantic_fhir` on all official examples from specifications."""
 import re
+import io
 import json
-import _io
 import typing
 from pathlib import Path
 from collections import Counter
@@ -92,7 +93,7 @@ def test_primitive_extension_exists(fhir_file: Path):
         _check_field_extension_existence(resource, field, value)
 
 
-def _open_file(fhir_file: Path) -> _io.TextIOWrapper:
+def _open_file(fhir_file: Path) -> io.TextIOWrapper:
     """Open FHIR file unless it has to be skipped."""
     if fhir_file.name in NOT_WORKING:
         pytest.skip("test disabled")

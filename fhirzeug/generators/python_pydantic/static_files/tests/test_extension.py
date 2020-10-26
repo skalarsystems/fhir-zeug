@@ -1,4 +1,5 @@
 """Test Extension element."""
+import typing
 import pytest
 import pydantic
 
@@ -119,7 +120,10 @@ def test_primitive_extension_basic_usage(primitive_extension: r4.PrimitiveExtens
     r4.Patient(gender="unknown", gender__extension=primitive_extension)
 
 
-def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtension,):
+@pytest.mark.parametrize("null_value", [None, "", {}, []])
+def test_primitive_list_extension_usage(
+    primitive_extension: r4.PrimitiveExtension, null_value: typing.Any
+):
     """Test usage of primitive list extension."""
     # `given` field is Optional for HumanName
     r4.HumanName()
@@ -134,7 +138,7 @@ def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtensi
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(given__extension=primitive_extension)
 
-    # If `given` and `given__extension` are both provided, they must be of same length
+    # If `given` and `given__extension` are both provided, they must be of the same length
     r4.HumanName(given=[NAME], given__extension=[primitive_extension])
     r4.HumanName(
         given=[NAME, NAME], given__extension=[primitive_extension, primitive_extension],
@@ -150,35 +154,41 @@ def test_primitive_list_extension_usage(primitive_extension: r4.PrimitiveExtensi
 
     with pytest.raises(pydantic.ValidationError):
         r4.HumanName(
-            given=[None, NAME],
-            given__extension=[primitive_extension, None, primitive_extension],
+            given=[null_value, NAME],
+            given__extension=[primitive_extension, null_value, primitive_extension],
         )
 
-    # Not the same length because None values are not removed from list
+    # Not the same length because `null` values are not removed from list
     with pytest.raises(pydantic.ValidationError):
-        r4.HumanName(given=[None, NAME, None], given__extension=[primitive_extension])
+        r4.HumanName(
+            given=[null_value, NAME, None], given__extension=[primitive_extension]
+        )
 
-    # Not the same length but a list is either empty, either filled with None values
+    # Not the same length but a list is either empty, either filled with `null` values
     # -> Valid and empty list is set to None
     name = r4.HumanName(
         given=[], given__extension=[primitive_extension, primitive_extension]
     )
     assert name.given is None
     name = r4.HumanName(
-        given=[None], given__extension=[primitive_extension, primitive_extension]
+        given=[null_value], given__extension=[primitive_extension, primitive_extension]
     )
     assert name.given is None
 
     name = r4.HumanName(given=[NAME, NAME], given__extension=[])
     assert name.given__extension is None
-    name = r4.HumanName(given=[NAME, NAME], given__extension=[None])
+    name = r4.HumanName(given=[NAME, NAME], given__extension=[null_value])
     assert name.given__extension is None
 
     # Provided value can be None but not in both arrays for the same position
-    r4.HumanName(given=[None, NAME], given__extension=[primitive_extension, None])
-    r4.HumanName(given=[NAME, NAME], given__extension=[primitive_extension, None])
+    r4.HumanName(
+        given=[null_value, NAME], given__extension=[primitive_extension, null_value]
+    )
+    r4.HumanName(given=[NAME, NAME], given__extension=[primitive_extension, null_value])
     with pytest.raises(pydantic.ValidationError):
-        r4.HumanName(given=[NAME, None], given__extension=[primitive_extension, None])
+        r4.HumanName(
+            given=[NAME, null_value], given__extension=[primitive_extension, null_value]
+        )
 
     # Both lists cannot be empty at the same time
     with pytest.raises(pydantic.ValidationError):
