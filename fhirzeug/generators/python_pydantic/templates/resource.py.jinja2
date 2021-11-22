@@ -108,15 +108,12 @@ class {{ clazz.name }}({{ clazz.superclass.name|default('object')}}):
         @staticmethod
         def schema_extra(schema: typing.Dict[str, typing.Any]) -> None:
         {%- for enum in enums %}
+            enums = [{"value": item.value, "description": item.__doc__} for item in {{ enum["enum"] }}]
             {%-if enum["enum"] == "DaysOfWeek"%}
-            enums = schema["properties"]["{{ enum["name"] }}"]["items"]["enum"]
+            schema["properties"]["{{ enum["name"] }}"]["items"]["enum"] = enums
             {%- else %}
-            enums = schema["properties"]["{{ enum["name"] }}"]["enum"]
+            schema["properties"]["{{ enum["name"] }}"]["enum"] = enums
             {%- endif  %}
-            enums.clear()
-            for item in {{ enum["enum"] }}:
-                a = {"value": item.value, "description": item.__doc__}
-                enums.append(a)
         {% endfor %}
 {% endif %}
 
