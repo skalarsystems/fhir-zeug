@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydantic-fhir"
-version = "0.0.1-alpha17"
+version = "0.0.1-alpha18"
 description = "Generated FHIR model for Pydantic."
 readme = "README.md"
 authors = ["Skalar Systems <contact@skalarsystems.com>"]
