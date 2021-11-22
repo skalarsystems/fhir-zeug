@@ -1,5 +1,3 @@
-from pydantic.schema import schema
-import pytest
 from pydantic_fhir import r4
 
 
