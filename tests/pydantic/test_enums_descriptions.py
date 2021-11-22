@@ -16,11 +16,9 @@ class ExampleModel(BaseModel):
     class Config:
         @staticmethod
         def schema_extra(schema: Dict[str, Any]) -> None:
-            enums = schema["properties"]["gender"]["enum"]
-            enums.clear()
-            for item in Gender:
-                a = {"value": item.value, "description": item.__doc__}
-                enums.append(a)
+            schema["properties"]["gender"]["enum"] = [
+                {"value": item.value, "description": item.__doc__} for item in Gender
+            ]
 
 
 def test_enum_member_descriptions():
