@@ -27,31 +27,21 @@ jobs:
           python-version: 3.8
 
       - name: Install Poetry
-        uses: dschep/install-poetry-action@v1.3
+        uses: snok/install-poetry@v1.1.1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v1
-        id: cache
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
         with:
           path: .venv
-          # The `2` suffix is used because there is no way to clear the cache
-          # manually, and we needed it to fix the pipeline. The cache is evicted
-          # automatically if not used for 7 days, so we'll be able to get rid
-          # of this suffix in the future.
-          # https://docs.github.com/en/free-pro-team@latest/actions/guides/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy
-          key: poetry2-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            poetry2-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Set Poetry config
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project false
-          poetry config virtualenvs.path ~/.virtualenvs
+          key: venv1-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install Dependencies
         run: poetry install
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
 
       # Code quality
       - name: Code Quality Black
